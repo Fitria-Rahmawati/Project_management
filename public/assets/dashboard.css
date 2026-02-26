@@ -1,0 +1,15 @@
+.cards {
+    display: flex;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.card {
+    padding: 20px;
+    background: #f4f6f8;
+    border-radius: 8px;
+    width: 180px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    font-size: 14px;
+}
