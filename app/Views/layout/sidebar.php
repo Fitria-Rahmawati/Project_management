@@ -2,8 +2,8 @@
 
 <aside class="sidebar">
     <h3><?= strtoupper($role) ?></h3>
-    <ul>
 
+    <ul>
         <li><a href="<?= base_url('dashboard') ?>">Dashboard</a></li>
 
         <?php if ($role === 'superadmin'): ?>
@@ -29,6 +29,8 @@
             <li><a href="<?= base_url('staff/issues') ?>">Issue Tugas</a></li>
         <?php endif; ?>
 
-        <li><a href="<?= base_url('logout') ?>">Logout</a></li>
+        <li class="divider"></li>
+
+        <li><a class="logout" href="<?= base_url('logout') ?>">Logout</a></li>
     </ul>
 </aside>

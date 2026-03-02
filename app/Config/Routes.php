@@ -20,8 +20,18 @@ $routes->get('/logout', 'AuthController::logout');
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'auth']);
 
 // ================= SUPERADMIN =================
-$routes->group('superadmin', ['filter' => 'auth,role:superadmin'], function ($routes) {
+$routes->group('superadmin', ['filter' => 'auth'], function ($routes) {
+
     $routes->get('companies', 'CompanyController::index');
+    $routes->get('companies/create', 'CompanyController::create');
+    $routes->post('companies/store', 'CompanyController::store');
+    $routes->get('companies/edit/(:num)', 'CompanyController::edit/$1');
+    $routes->post('companies/update/(:num)', 'CompanyController::update/$1');
+    $routes->get('companies/delete/(:num)', 'CompanyController::delete/$1');
+    $routes->get('companies/toggle/(:num)', 'CompanyController::toggleStatus/$1');
+    $routes->get('companies/status/(:num)', 'CompanyController::toggleStatus/$1');
+
+
     $routes->get('users', 'UserController::index');
     $routes->get('roles', 'RoleController::index');
     $routes->get('monitoring', 'MonitoringController::index');

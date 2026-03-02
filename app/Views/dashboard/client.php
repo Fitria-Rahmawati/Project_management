@@ -1,10 +1,14 @@
-<?= view('layout/sidebar') ?>
-<?= view('layout/app') ?>
+<main class="content">
+    <h2>Welcome, <?= $username ?> (CLIENT)</h2>
 
-<h1>Dashboard Client</h1>
-<p>Selamat datang <?= session('username') ?></p>
+    <div class="dashboard-cards" style="display:flex; gap:20px; flex-wrap:wrap;">
+        <div class="card">My Projects: <?= $myProjects ?></div>
+        <div class="card">Ongoing Projects: <?= $ongoingProjects ?></div>
+    </div>
 
-<div>
-    <p>Proyek Saya</p>
-    <p>Status Proyek</p>
-</div>
+    <div class="shortcut-buttons" style="margin-top:20px;">
+        <a href="<?= base_url('client/projects') ?>">My Projects</a>
+        <a href="<?= base_url('client/progress') ?>">Progress</a>
+        <a href="<?= base_url('client/issues') ?>">Issues</a>
+    </div>
+</main>

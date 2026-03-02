@@ -1,3 +1,5 @@
-<div class="header">
-    <h3>Dashboard</h3>
-</div>
+<header class="header">
+    <div>
+        <strong>Welcome,</strong> <?= session()->get('username') ?>
+    </div>
+</header>

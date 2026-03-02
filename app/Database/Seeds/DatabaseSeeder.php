@@ -33,5 +33,7 @@ class DatabaseSeeder extends Seeder
         // ======================
         $this->call('ProjectSeeder');
         $this->call('ProjectMemberSeeder');
+        $this->call('IssueSeeder');
+        $this->call('IssueLogSeeder');
     }
 }

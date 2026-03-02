@@ -8,24 +8,21 @@ use CodeIgniter\Filters\FilterInterface;
 
 class RoleFilter implements FilterInterface
 {
-    public function before(RequestInterface $request, $roles = null)
+    public function before(RequestInterface $request, $arguments = null)
     {
-        // belum login
-        if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
+        if (!$arguments) {
+            return;
         }
 
-        // role user sekarang
-        $userRole = session('role');
+        $userRole = session()->get('role');
 
-        // kalau role tidak sesuai
-        if ($roles && !in_array($userRole, $roles)) {
+        if (!in_array($userRole, $arguments)) {
             return redirect()->to('/dashboard');
         }
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
-        // 
+        //
     }
 }

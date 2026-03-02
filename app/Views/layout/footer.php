@@ -1,3 +1,5 @@
-<div class="footer">
-    © <?= date('Y') ?> Sistem Data Proyek — All rights reserved
-</div>
+<footer class="footer">
+    <small>
+        © <?= date('Y') ?> Project Management System
+    </small>
+</footer>
