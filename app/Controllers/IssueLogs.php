@@ -8,6 +8,7 @@ class IssueLogs extends BaseController
     public function index($issueId)
     {
         return view('issue_logs/index', [
+            'title' => 'Riwayat Perubahan Status',
             'logs' => (new IssueLogModel())
                 ->where('issue_id',$issueId)
                 ->findAll()

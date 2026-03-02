@@ -29,6 +29,7 @@ class CompanyController extends BaseController
         $builder = $builder->where('is_active', $status);
     }
         return view('company/index', [
+            'title' => 'Data Perusahaan',
             'companies' => $builder->findAll()
         ]);
     }

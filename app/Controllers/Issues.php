@@ -18,6 +18,7 @@ class Issues extends BaseController
     public function index($projectId)
     {
         return view('issues/index', [
+            'title'  => 'Daftar Issue',
             'issues' => $this->issue
                 ->where('project_id',$projectId)
                 ->findAll()
@@ -26,7 +27,11 @@ class Issues extends BaseController
 
     public function create($projectId)
     {
-        return view('issues/create', ['project_id'=>$projectId]);
+        return view('issues/create', [
+            'project_id'=>$projectId,
+            'title' => 'Tambah Issue'
+        ]);
+        
     }
 
     public function store()

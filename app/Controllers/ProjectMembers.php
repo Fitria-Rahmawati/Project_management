@@ -15,6 +15,7 @@ class ProjectMembers extends BaseController
     public function index($projectId)
     {
         return view('project_members/index', [
+            'title'   => 'Anggota Proyek',
             'members' => $this->member
                 ->where('project_id',$projectId)
                 ->findAll()

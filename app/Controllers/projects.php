@@ -15,13 +15,16 @@ class Projects extends BaseController
     public function index()
     {
         return view('projects/index', [
+            'title'    => 'Daftar Proyek',
             'projects' => $this->project->findAll()
         ]);
     }
 
     public function create()
     {
-        return view('projects/create');
+        return view('projects/create', [
+            'title' => 'Tambah Proyek'
+        ]);
     }
 
     public function store()
@@ -33,6 +36,7 @@ class Projects extends BaseController
     public function edit($id)
     {
         return view('projects/edit', [
+            'title'   => 'Edit Proyek',
             'project' => $this->project->find($id)
         ]);
     }

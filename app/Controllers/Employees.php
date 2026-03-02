@@ -28,13 +28,15 @@ class Employees extends BaseController
             ->join('departements', 'departements.id = employees.departement_id')
             ->findAll();
 
-        return view('employees/index', $data);
+        return view('employees/index', array_merge($data, ['title' => 'Daftar Karyawan']));
+        
     }
 
     // 🔹 Form tambah employee
     public function create()
     {
         return view('employees/create', [
+                'title'      => 'Tambah Karyawan',
             'positions'   => $this->position->findAll(),
             'departments' => $this->department->findAll()
         ]);
@@ -61,6 +63,7 @@ class Employees extends BaseController
     public function edit($id)
     {
         return view('employees/edit', [
+                'title'       => 'Edit Karyawan',
             'employee'    => $this->employee->find($id),
             'positions'   => $this->position->findAll(),
             'departments' => $this->department->findAll()

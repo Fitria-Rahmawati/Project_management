@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\UserModel;
+use App\Models\RolePermissionModel;
 
 class AuthController extends BaseController
 {
@@ -14,6 +15,7 @@ class AuthController extends BaseController
     public function process()
     {
         $userModel = new UserModel();
+        $rolePermissionModel = new RolePermissionModel();
 
         $email    = $this->request->getPost('email');
         $password = $this->request->getPost('password');
@@ -31,7 +33,8 @@ class AuthController extends BaseController
         if ($user['is_active'] != 1) {
             return redirect()->back()->with('error', 'Akun tidak aktif');
         }
-
+        $permissions = $rolePermissionModel->getPermissionsByRole($user['role_id']);
+        $permissionSlugs = array_column($permissions, 'slug');
         session()->set([
             'user_id'    => $user['id'],
             'username'   => $user['username'],
@@ -39,6 +42,7 @@ class AuthController extends BaseController
             'role'       => $user['role_name'],
             'role_id'    => $user['role_id'],
             'company_id' => $user['company_id'],
+            'permissions' => $permissionSlugs,
             'isLoggedIn' => true
         ]);
          
