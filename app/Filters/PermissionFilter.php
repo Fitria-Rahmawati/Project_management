@@ -14,14 +14,15 @@ class PermissionFilter implements FilterInterface
         return redirect()->to('/login');
     }
 
-    $userPermissions = session()->get('permissions') ?? [];
+   
 
-    foreach ($arguments as $perm) {
-        if (!in_array($perm, $userPermissions)) {
+        $requiredPermission = $arguments[0];
+
+        if (!in_array($requiredPermission, session()->get('permissions'))) {
             return redirect()->to('/forbidden');
         }
     }
-}
+
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
         //

@@ -13,4 +13,19 @@ class ProjectModel extends Model
         'start_date','status','created_at','updated_at'
     ];
     protected $useTimestamps = true;
+    public function getAllWithRelation()
+    {
+        return $this->select('projects.*, employees.first_name as pm_name, companies.company_name')
+                    ->join('employees', 'employees.id = projects.project_manager_id', 'left')
+                    ->join('companies', 'companies.id = projects.company_id', 'left')
+                    ->findAll();
+    }
+
+    public function getByIdWithRelation($id)
+    {
+        return $this->select('projects.*, employees.first_name as pm_name')
+                    ->join('employees', 'employees.id = projects.project_manager_id', 'left')
+                    ->where('projects.id', $id)
+                    ->first();
+    }
 }

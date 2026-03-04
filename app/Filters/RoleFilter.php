@@ -18,10 +18,11 @@ class RoleFilter implements FilterInterface
             return;
         }
 
-        $userRole = session()->get('role');
+        $userRole = strtolower(session()->get('role'));
+        $requiredRoles = array_map('strtolower', $arguments);
 
-        if (!in_array($userRole, $arguments)) {
-            return redirect()->to('/dashboard');
+        if (!in_array($userRole, $requiredRoles)) {
+            return redirect()->to('/forbidden');
         }
     }
 

@@ -66,31 +66,31 @@ $routes->group('superadmin', ['filter' => 'role:superadmin'], function ($routes)
 $routes->group('admin', ['filter' => 'role:admin'], function ($routes) {
 
     // Dashboard
-    $routes->get('dashboard', 'AdminController::index');
+    $routes->get('dashboard', 'Dashboard::index');
 
     // Projects
-    $routes->get('projects', 'ProjectController::index', [
+    $routes->get('projects', 'Projects::index', [
         'filter' => 'permission:manage_projects'
     ]);
-    $routes->get('projects/(:num)', 'ProjectController::show/$1', [
+    $routes->get('projects/(:num)', 'Projects::show/$1', [
         'filter' => 'permission:view_projects'
     ]);
-    $routes->get('projects/create', 'ProjectController::create', [
+    $routes->get('projects/create', 'Projects::create', [
         'filter' => 'permission:manage_projects'
     ]);
-    $routes->post('projects/store', 'ProjectController::store', [
+    $routes->post('projects/store', 'Projects::store', [
         'filter' => 'permission:manage_projects'
     ]);
-    $routes->get('projects/edit/(:num)', 'ProjectController::edit/$1', [
+    $routes->get('projects/edit/(:num)', 'Projects::edit/$1', [
         'filter' => 'permission:manage_projects'
     ]);
-    $routes->post('projects/update/(:num)', 'ProjectController::update/$1', [
+    $routes->post('projects/update/(:num)', 'Projects::update/$1', [
         'filter' => 'permission:manage_projects'
     ]);
-    $routes->get('projects/delete/(:num)', 'ProjectController::delete/$1', [
+    $routes->get('projects/delete/(:num)', 'Projects::delete/$1', [
         'filter' => 'permission:manage_projects'
     ]);
-    $routes->get('projects/status/(:num)', 'ProjectController::toggleStatus/$1', [
+    $routes->get('projects/status/(:num)', 'Projects::toggleStatus/$1', [
         'filter' => 'permission:manage_projects'
     ]);
 
@@ -98,14 +98,78 @@ $routes->group('admin', ['filter' => 'role:admin'], function ($routes) {
     $routes->get('teams', 'TeamController::index', [
         'filter' => 'permission:manage_teams'
     ]);
+    $routes->get('teams/(:num)', 'TeamController::show/$1', [
+        'filter' => 'permission:view_teams'
+    ]);
+    $routes->get('teams/create', 'TeamController::create', [
+        'filter' => 'permission:manage_teams'
+
+    ]);
+    $routes->post('teams/store', 'TeamController::store', [
+        'filter' => 'permission:manage_teams'
+    ]);
+    $routes->get('teams/edit/(:num)', 'TeamController::edit/$1', [
+        'filter' => 'permission:manage_teams'
+    ]);
+    $routes->post('teams/update/(:num)', 'TeamController::update/$1', [
+        'filter' => 'permission:manage_teams'
+    ]);
+    $routes->get('teams/delete/(:num)', 'TeamController::delete/$1', [
+        'filter' => 'permission:manage_teams'
+    ]);
+    $routes->get('teams/status/(:num)', 'TeamController::toggleStatus/$1', [
+        'filter' => 'permission:manage_teams'
+    ]);
+    $routes->post('teams/add_member/(:num)', 'TeamController::addMember/$1', [
+        'filter' => 'permission:manage_teams'
+    ]);
+    $routes->get('teams/remove_member/(:num)/(:num)', 'TeamController::removeMember/$1/$2', [
+        'filter' => 'permission:manage_teams'
+    ]);
+    $routes->get('teams/assign_project/(:num)', 'TeamController::assignProject/$1', [
+        'filter' => 'permission:manage_teams'
+    ]);
+    $routes->get('teams/unassign_project/(:num)', 'TeamController::unassignProject/$1', [
+        'filter' => 'permission:manage_teams'
+    ]);
+    $routes->get('teams/projects/(:num)', 'TeamController::teamProjects/$1', [
+        'filter' => 'permission:view_teams'
+    ]);
+    $routes->get('teams/members/(:num)', 'TeamController::teamMembers/$1', [
+        'filter' => 'permission:view_teams'
+    ]);
+    $routes->get('teams/available_members/(:num)', 'TeamController::availableMembers/$1', [
+        'filter' => 'permission:manage_teams'
+    ]);
 
     // Issues
     $routes->get('issues', 'IssueController::index', [
         'filter' => 'permission:manage_issues'
     ]);
+        $routes->get('issues/(:num)', 'IssueController::show/$1', [
+            'filter' => 'permission:view_issues'
+        ]);
+    $routes->get('issues/create', 'IssueController::create', [
+        'filter' => 'permission:create_issues'
+    ]);
+    $routes->post('issues/store', 'IssueController::store', [
+        'filter' => 'permission:create_issues'
+    ]);
+    $routes->get('issues/edit/(:num)', 'IssueController::edit/$1', [
+        'filter' => 'permission:update_issues'
+    ]);
+    $routes->post('issues/update/(:num)', 'IssueController::update/$1', [
+        'filter' => 'permission:update_issues'
+    ]);
+    $routes->get('issues/delete/(:num)', 'IssueController::delete/$1', [
+        'filter' => 'permission:manage_issues'
+    ]);
 
     // Reports
     $routes->get('reports', 'ReportController::index', [
+        'filter' => 'permission:view_reports'
+    ]);
+    $routes->get('reports/generate', 'ReportController::generate', [
         'filter' => 'permission:view_reports'
     ]);
 });
@@ -169,4 +233,6 @@ $routes->group('staff', ['filter' => 'role:staff'], function ($routes) {
 | FORBIDDEN
 |--------------------------------------------------------------------------
 */
+$routes->get('forbidden', 'ErrorController::forbidden');
 $routes->get('/forbidden', 'ErrorController::forbidden');
+$routes->get('/403', 'ErrorController::forbidden');

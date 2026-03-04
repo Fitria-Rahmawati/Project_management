@@ -22,4 +22,11 @@ class EmployeeModel extends Model
     ];
 
     protected $useTimestamps = true;
+    public function getProjectManagers()
+    {
+        return $this->select('employees.id, employees.first_name')
+                    ->join('positions', 'positions.id = employees.position_id')
+                    ->where('positions.position_name', 'Project Manager')
+                    ->findAll();
+    }
 }
