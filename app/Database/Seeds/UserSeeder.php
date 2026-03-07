@@ -24,6 +24,22 @@ class UserSeeder extends Seeder
                 'company_id' => 1,
                 'is_active' => 1,
             ],
+            [
+                'username' => 'client',
+                'email' => 'client@internalcompany.com',
+                'password' => password_hash('client123', PASSWORD_BCRYPT),
+                'role_id' => 3,
+                'company_id' => 1,
+                'is_active' => 1,
+            ],
+            [
+                'username' => 'staff',
+                'email' => 'staff@internalcompany.com',
+                'password' => password_hash('staff123', PASSWORD_BCRYPT),
+                'role_id' => 4,
+                'company_id' => 1,
+                'is_active' => 1,
+            ]
         ];
         foreach ($data as $user) {
             $this->db->table('users')->insert($user);

@@ -1,68 +1,114 @@
 <?php
 
 namespace App\Controllers;
+
 use App\Models\IssueModel;
-use App\Models\IssueLogModel;
 
 class Issues extends BaseController
 {
     protected $issue;
-    protected $log;
+    protected $db;
 
     public function __construct()
     {
         $this->issue = new IssueModel();
-        $this->log   = new IssueLogModel();
+        $this->db = \Config\Database::connect();
     }
 
-    public function index($projectId)
+    public function index()
     {
-        return view('issues/index', [
-            'title'  => 'Daftar Issue',
-            'issues' => $this->issue
-                ->where('project_id',$projectId)
-                ->findAll()
-        ]);
+        $builder = $this->db->table('issues');
+
+        $builder->select('issues.*, projects.project_name, employees.first_name as employee_name');
+
+        $builder->join('projects','projects.id = issues.project_id');
+        $builder->join('employees','employees.id = issues.assigned_to');
+
+        $data = [
+            'title' => 'Issues',
+            'issues' => $builder->get()->getResultArray()
+        ];
+
+        return view('admin/issues/index', $data);
     }
 
-    public function create($projectId)
+    public function show($id)
     {
-        return view('issues/create', [
-            'project_id'=>$projectId,
-            'title' => 'Tambah Issue'
-        ]);
-        
+        $builder = $this->db->table('issues');
+
+        $builder->select('issues.*, projects.project_name, employees.first_name as employee_name');
+
+        $builder->join('projects','projects.id = issues.project_id');
+        $builder->join('employees','employees.id = issues.assigned_to');
+
+        $builder->where('issues.id',$id);
+
+        $data = [
+            'title' => 'Detail Issue',
+            'issue' => $builder->get()->getRowArray()
+        ];
+
+        return view('admin/issues/show', $data);
+    }
+
+    public function create()
+    {
+        $data = [
+            'title' => 'Tambah Issue',
+            'projects' => $this->db->table('projects')->get()->getResultArray(),
+            'employees' => $this->db->table('employees')->get()->getResultArray()
+        ];
+
+        return view('admin/issues/create',$data);
     }
 
     public function store()
     {
-        $this->issue->save([
-            'project_id'   => $this->request->getPost('project_id'),
-            'title'        => $this->request->getPost('title'),
-            'description'  => $this->request->getPost('description'),
-            'priority'     => $this->request->getPost('priority'),
-            'status'       => 'open',
-            'reported_by'  => session('user_id'),
-            'assigned_to'  => $this->request->getPost('assigned_to')
+        $this->issue->insert([
+
+            'project_id' => $this->request->getPost('project_id'),
+            'assigned_to' => $this->request->getPost('assigned_to'),
+            'title' => $this->request->getPost('title'),
+            'description' => $this->request->getPost('description'),
+            'priority' => $this->request->getPost('priority'),
+            'status' => 'open'
+
         ]);
-        return redirect()->to('/projects');
+
+        return redirect()->to('admin/issues')
+        ->with('success','Issue berhasil dibuat');
     }
 
-    public function updateStatus($id)
+    public function edit($id)
     {
-        $old = $this->issue->find($id)['status'];
-        $new = $this->request->getPost('status');
+        $data = [
+            'title' => 'Edit Issue',
+            'issue' => $this->issue->find($id)
+        ];
 
-        $this->issue->update($id, ['status'=>$new]);
+        return view('admin/issues/edit',$data);
+    }
 
-        $this->log->insert([
-            'issue_id'   => $id,
-            'old_status' => $old,
-            'new_status' => $new,
-            'changed_by'=> session('user_id'),
-            'changed_at'=> date('Y-m-d H:i:s')
+    public function update($id)
+    {
+        $this->issue->update($id,[
+
+            'title' => $this->request->getPost('title'),
+            'description' => $this->request->getPost('description'),
+            'priority' => $this->request->getPost('priority'),
+            'status' => $this->request->getPost('status')
+
         ]);
 
-        return redirect()->back();
+        return redirect()->to('admin/issues')
+        ->with('success','Issue berhasil diupdate');
+    }
+
+    public function delete($id)
+    {
+        $this->issue->delete($id);
+
+        return redirect()->to('admin/issues')
+        ->with('success','Issue berhasil dihapus');
     }
 }

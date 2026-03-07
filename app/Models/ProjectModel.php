@@ -28,4 +28,12 @@ class ProjectModel extends Model
                     ->where('projects.id', $id)
                     ->first();
     }
+    public function getDetailProject($id)
+{
+    return $this->select('projects.*, companies.company_name, employees.name as manager_name')
+        ->join('companies', 'companies.id = projects.company_id', 'left')
+        ->join('employees', 'employees.id = projects.project_manager_id', 'left')
+        ->where('projects.id', $id)
+        ->first();
+}
 }

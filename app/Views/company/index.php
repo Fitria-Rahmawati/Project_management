@@ -38,17 +38,32 @@
                     <td><?= $company['email'] ?></td>
                     <td><?= $company['phone'] ?? '-' ?></td>
                     <td>
-                        <form method="post" action="<?= base_url('superadmin/companies/status/'.$company['id']) ?>">
-                            <input type="hidden" name="_method" value="toggle">
-                            <button type="submit" class="status-btn <?= $company['is_active'] ? 'active' : 'inactive' ?>">
-                                <?= $company['is_active'] ? 'Active' : 'Inactive' ?>
-                            </button>
-                        </form>
+                        <?php if ($company['company_type'] === 'internal'): ?>
+                            <span class="badge bg-info">Internal</span>
+                        <?php endif; ?>
+                        <?php if ($company['company_type'] === 'external'): ?>
+                            <span class="badge bg-warning">External</span>
+                        <?php endif; ?>
+                        <?php if ($company['is_active']): ?>
+                            <span class="badge bg-success">Aktif</span>
+                        <?php else: ?>
+                            <span class="badge bg-secondary">Nonaktif</span>
+                        <?php endif; ?>
                     </td>
-                    <td>
-                        <a href="<?= base_url('superadmin/companies/edit/'.$company['id']) ?>">Edit</a> |
-                        <a href="<?= base_url('superadmin/companies/delete/'.$company['id']) ?>" onclick="return confirm('Yakin ingin menghapus?')">Hapus</a>
-                    </td>
+                    <td class="text-center">
+    <div class="d-flex justify-content-center gap-2">
+        <a href="/superadmin/companies/edit/<?= $company['id'] ?>"
+           class="btn btn-sm btn-warning" title="Edit">
+            ✏️ Edit
+        </a>
+
+        <a href="/superadmin/companies/delete/<?= $company['id'] ?>"
+           onclick="return confirm('Yakin hapus perusahaan?')"
+           class="btn btn-sm btn-danger" title="Hapus">
+            🗑️ Hapus
+        </a>
+    </div>
+</td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -71,14 +86,25 @@ function filterTable() {
         tr[i].style.display = show ? '' : 'none';
     }
 }
-filterBorder = document.querySelectorAll('.status-btn');
-filterBorder.forEach(btn => {
-    btn.addEventListener('click', function() {
-        filterBorder.forEach(b => b.classList.remove('active', 'inactive'));
-        this.classList.add(this.textContent.trim() === 'Active' ? 'active' : 'inactive');
-    });
+
     
-});
+function filterCompanyTable() {
+    const search = document.getElementById('searchCompany').value.toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+
+    const table = document.getElementById('companiesTable');
+    const rows = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < rows.length; i++) {
+        const companyName = rows[i].getElementsByTagName('td')[1].textContent.toLowerCase();
+        const companyStatus = rows[i].getElementsByTagName('td')[6].textContent.toLowerCase();
+
+        const matchesSearch = companyName.includes(search);
+        const matchesStatus = status === 'all' || companyStatus === status;
+
+        rows[i].style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+    }
+}
 </script>
 
 <?= $this->endSection() ?>

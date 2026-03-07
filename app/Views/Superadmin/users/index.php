@@ -3,8 +3,6 @@
 
 <main class="content">
     <h2>Data User</h2>
-
-    <!-- FILTER -->
     <div class="filter-section">
         <input type="text"
                id="searchUser"
@@ -88,18 +86,13 @@
     <div class="d-flex justify-content-center gap-2">
         <a href="/superadmin/users/edit/<?= $u['id'] ?>"
            class="btn btn-sm btn-warning" title="Edit">
-            ✏️
-        </a>
-
-        <a href="/superadmin/users/toggle/<?= $u['id'] ?>"
-           class="btn btn-sm btn-info" title="Aktif / Nonaktif">
-            🔁
+            ✏️ Edit
         </a>
 
         <a href="/superadmin/users/delete/<?= $u['id'] ?>"
            onclick="return confirm('Yakin hapus user?')"
            class="btn btn-sm btn-danger" title="Hapus">
-            🗑️
+            🗑️ Hapus
         </a>
     </div>
 </td>
@@ -113,8 +106,30 @@
 
 </main>
 
-<!-- JS FILTER -->
 <script>
+function filterUserTable() {
+    const search = document.getElementById('searchUser').value.toLowerCase();
+    const companyType = document.getElementById('companyTypeFilter').value;
+    const status = document.getElementById('statusFilter').value;
+
+    const table = document.getElementById('usersTable');
+    const rows = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < rows.length; i++) {
+        const username = rows[i].getElementsByTagName('td')[1].textContent.toLowerCase();
+        const email = rows[i].getElementsByTagName('td')[2].textContent.toLowerCase();
+        const kategori = rows[i].getElementsByTagName('td')[5].textContent.toLowerCase();
+        const statusText = rows[i].getElementsByTagName('td')[6].textContent.toLowerCase();
+
+        const matchSearch = username.includes(search) || email.includes(search);
+        const matchCompany = companyType === 'all' || kategori === companyType;
+        const matchStatus = status === 'all' || statusText === status;
+
+        rows[i].style.display = (matchSearch && matchCompany && matchStatus)
+            ? ''
+            : 'none';
+    }
+}
 function filterUserTable() {
     const search = document.getElementById('searchUser').value.toLowerCase();
     const companyType = document.getElementById('companyTypeFilter').value;

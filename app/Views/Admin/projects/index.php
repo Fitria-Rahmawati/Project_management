@@ -43,6 +43,10 @@
                         <a href="/admin/projects/edit/<?= $row['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
                         <a href="/admin/projects/delete/<?= $row['id'] ?>" class="btn btn-danger btn-sm"
                            onclick="return confirm('Yakin hapus?')">Hapus</a>
+                           <a href="<?= base_url('admin/projects/'.$row['id']) ?>" 
+       class="btn btn-info btn-sm">
+       Detail
+    </a>
                     </td>
                 </tr>
                 <?php endforeach ?>
