@@ -16,9 +16,22 @@ $routes->get('/', 'AuthController::login');
 $routes->get('/login', 'AuthController::login');
 $routes->post('/login/process', 'AuthController::process');
 $routes->get('/logout', 'AuthController::logout');
+// Register
+$routes->get('/register', 'RegisterController::index');
+$routes->post('/register/process', 'RegisterController::process');
 
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'auth']);
-
+// Tambahkan route untuk profile (berlaku untuk semua role)
+$routes->group('', ['filter' => 'auth'], function($routes) {
+    $routes->get('profile', 'ProfileController::index');
+    $routes->post('profile/update', 'ProfileController::update');
+    $routes->get('profile/change-password', 'ProfileController::changePassword');
+    $routes->post('profile/update-password', 'ProfileController::updatePassword');
+    
+    // Notifikasi
+    $routes->get('notifications', 'NotificationController::index');
+    $routes->get('notifications/read/(:num)', 'NotificationController::read/$1');
+});
 /*
 |--------------------------------------------------------------------------
 | SUPERADMIN
@@ -167,12 +180,14 @@ $routes->group('admin', ['filter' => 'role:admin'], function ($routes) {
     ]);
 
     // Reports
-    $routes->get('reports', 'ReportController::index', [
-        'filter' => 'permission:view_reports'
-    ]);
-    $routes->get('reports/generate', 'ReportController::generate', [
-        'filter' => 'permission:view_reports'
-    ]);
+    $routes->group('reports', ['namespace' => 'App\Controllers\Admin'], function($routes) {
+        $routes->get('/', 'ReportController::index');
+        $routes->get('projects', 'ReportController::projects');
+        $routes->get('issues', 'ReportController::issues');
+        $routes->get('team', 'ReportController::team');
+        $routes->get('clients', 'ReportController::clients');
+        $routes->get('export/(:any)', 'ReportController::export/$1');
+    });
 });
 
 /*

@@ -13,14 +13,35 @@ class ProjectModel extends Model
         'start_date','status','created_at','updated_at'
     ];
     protected $useTimestamps = true;
-    public function getAllWithRelation()
-    {
-        return $this->select('projects.*, employees.first_name as pm_name, companies.company_name')
-                    ->join('employees', 'employees.id = projects.project_manager_id', 'left')
-                    ->join('companies', 'companies.id = projects.company_id', 'left')
-                    ->findAll();
+   public function getAllWithRelation($status = null, $type = null, $company = null)
+{
+    $builder = $this->db->table('projects p');
+    $builder->select('
+        p.*,
+        c.company_name,
+        c.company_type,
+        u.username as manager_username,
+        e.first_name as manager_first_name,
+        e.last_name as manager_last_name
+    ');
+    $builder->join('companies c', 'c.id = p.company_id', 'left');
+    $builder->join('users u', 'u.id = p.project_manager_id', 'left');
+    $builder->join('employees e', 'e.user_id = u.id', 'left');
+
+    if ($status) {
+        $builder->where('p.status', $status);
+    }
+    if ($type) {
+        $builder->where('p.project_type', $type);
+    }
+    if ($company) {
+        $builder->where('p.company_id', $company);
     }
 
+    $builder->orderBy('p.created_at', 'DESC');
+
+    return $builder->get()->getResultArray();
+}
     public function getByIdWithRelation($id)
     {
         return $this->select('projects.*, employees.first_name as pm_name')

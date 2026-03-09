@@ -1,164 +1,353 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Login - project System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Project Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
-<style>
+        .login-container {
+            background: white;
+            max-width: 420px;
+            width: 100%;
+            padding: 40px 35px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.5s ease;
+        }
 
-*{box-sizing:border-box;}
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
 
-body{
-    margin:0;
-    font-family:'Poppins', sans-serif;
-    background: linear-gradient(135deg,#4e73df,#224abe);
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
+        .login-header i {
+            font-size: 65px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
 
-.login-container{
-    background:white;
-    padding:40px;
-    width:400px;
-    border-radius:15px;
-    box-shadow:0 20px 45px rgba(0,0,0,0.2);
-}
+        .login-header h2 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
 
-.title{
-    text-align:center;
-    margin-bottom:30px;
-}
+        .login-header p {
+            color: #888;
+            font-size: 14px;
+            font-weight: 300;
+        }
+        .alert {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
 
-.title i{
-    font-size:50px;
-    color:#4e73df;
-}
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-.title h2{
-    margin:10px 0 0;
-    color:#4e73df;
-}
+        .alert i {
+            font-size: 18px;
+        }
 
-.subtitle{
-    font-size:13px;
-    color:#777;
-}
+        .alert-error {
+            background: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
 
-.error{
-    background:#ffd2d2;
-    color:#b30000;
-    padding:10px;
-    border-radius:8px;
-    margin-bottom:15px;
-    text-align:center;
-}
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
 
-.success{
-    background:#d4edda;
-    color:#155724;
-    padding:10px;
-    border-radius:8px;
-    margin-bottom:15px;
-    text-align:center;
-}
+        .form-group {
+            margin-bottom: 25px;
+        }
 
-.input-group{
-    position:relative;
-    margin-bottom:20px;
-}
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+        }
 
-.input-group i{
-    position:absolute;
-    top:50%;
-    left:12px;
-    transform:translateY(-50%);
-    color:#4e73df;
-}
+        .input-group {
+            position: relative;
+        }
 
-.input-group input{
-    width:100%;
-    padding:12px 12px 12px 40px;
-    border-radius:8px;
-    border:1px solid #ddd;
-}
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 18px;
+            transition: color 0.3s;
+        }
 
-.input-group input:focus{
-    outline:none;
-    border-color:#4e73df;
-}
+        .input-group input {
+            width: 100%;
+            padding: 14px 15px 14px 48px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
 
-button{
-    width:100%;
-    padding:12px;
-    border:none;
-    border-radius:8px;
-    background:#4e73df;
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
-}
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
 
-button:hover{
-    background:#2e59d9;
-}
+        .input-group input:hover {
+            border-color: #bbb;
+            background: white;
+        }
 
-.footer{
-    text-align:center;
-    margin-top:20px;
-    font-size:14px;
-}
+        .input-group input::placeholder {
+            color: #aaa;
+            font-size: 13px;
+        }
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
 
-.footer a{
-    color:#4e73df;
-    text-decoration:none;
-    font-weight:600;
-}
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-.footer a:hover{
-    text-decoration:underline;
-}
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
 
-</style>
+        .remember-me label {
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .forgot-password {
+            color: #667eea;
+            font-size: 14px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .forgot-password:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-login i {
+            font-size: 18px;
+        }
+        .login-footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .login-footer p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .login-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 5px;
+            transition: color 0.3s;
+        }
+
+        .login-footer a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+
+            .login-header h2 {
+                font-size: 24px;
+            }
+
+            .form-options {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="title">
-            <i class="fa fa-ticket"></i>
+        <div class="login-header">
+            <i class="fas fa-tasks"></i>
             <h2>Project System</h2>
-            <div class="subtitle">
-                Silakan login
-            </div>
+            <p>Silakan login untuk mengakses dashboard</p>
         </div>
-        <?php if(session()->getFlashdata('success')): ?>
-            <div class="success">
-                <?= session()->getFlashdata('success') ?>
-            </div>
-        <?php endif;?>
         <?php if(session()->getFlashdata('error')): ?>
-            <div class="error">
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
                 <?= session()->getFlashdata('error') ?>
             </div>
-        <?php endif;?>
+        <?php endif; ?>
+
+        <?php if(session()->getFlashdata('success')): ?>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <?= session()->getFlashdata('success') ?>
+            </div>
+        <?php endif; ?>
         <form action="<?= base_url('login/process') ?>" method="post">
-            <div class="input-group">
-                <i class="fa fa-envelope"></i>
-                <input type="email"name="email"placeholder="Masukkan Email"required>
+            <?= csrf_field() ?>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input 
+                        type="email" 
+                        id="email"
+                        name="email" 
+                        placeholder="Masukkan email" 
+                        value="<?= old('email') ?>" 
+                        required
+                        autofocus
+                    >
+                </div>
             </div>
-            <div class="input-group">
-                <i class="fa fa-lock"></i>
-                <input type="password"name="password"placeholder="Masukkan Password"required>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input 
+                        type="password" 
+                        id="password"
+                        name="password" 
+                        placeholder="Masukkan password" 
+                        required
+                    >
+                </div>
             </div>
-            <button type="submit">
-                <i class="fa fa-sign-in-alt"></i> Login
+
+            <div class="form-options">
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Ingat saya</label>
+                </div>
+                <a href="<?= base_url('forgot-password') ?>" class="forgot-password">
+                    Lupa password?
+                </a>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i>
+                Login
             </button>
         </form>
-        <div class="footer">Belum punya akun?<a href="<?= base_url('register') ?>">Register</a></div>
+        <div class="login-footer">
+            <p>
+                Belum punya akun?
+                <a href="<?= base_url('register') ?>">Daftar sekarang</a>
+            </p>
+        </div>
     </div>
+    <script>
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
 </body>
 </html>

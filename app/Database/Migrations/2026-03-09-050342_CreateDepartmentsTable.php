@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateProjectMembersTable extends Migration
+class CreateDepartmentsTable extends Migration
 {
     public function up()
     {
@@ -15,30 +15,40 @@ class CreateProjectMembersTable extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-
-            'project_id' => [
+            'department_name' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 100,
+            ],
+            'department_code' => [  
+                'type'       => 'VARCHAR',
+                'constraint' => 20,
+                'unique'     => true, 
+            ],
+            'description' => [
+                'type' => 'TEXT',
+                'null' => true,
+            ],
+            'head_position_id' => [  
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
+                'null'       => true,
             ],
-
-            'employee_id' => [
+            'parent_id' => [  
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
+                'null'       => true,
             ],
-
-            'position_id' => [
-                'type'       => 'INT',
-                'constraint' => 11,
-                'unsigned'   => true,
+            'is_active' => [  
+                'type'       => 'TINYINT',
+                'constraint' => 1,
+                'default'    => 1,
             ],
-
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
             ],
-
             'updated_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
@@ -46,38 +56,28 @@ class CreateProjectMembersTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-
-        $this->forge->addUniqueKey(['project_id', 'employee_id']);
-
+        
         $this->forge->addForeignKey(
-            'project_id',
-            'projects',
-            'id',
-            'CASCADE',
-            'CASCADE'
-        );
-
-        $this->forge->addForeignKey(
-            'employee_id',
-            'employees',
-            'id',
-            'CASCADE',
-            'CASCADE'
-        );
-
-        $this->forge->addForeignKey(
-            'position_id',
+            'head_position_id',
             'positions',
             'id',
+            'SET NULL', 
+            'CASCADE'
+        );
+
+        $this->forge->addForeignKey(
+            'parent_id',
+            'departments',
+            'id',
             'CASCADE',
             'CASCADE'
         );
 
-        $this->forge->createTable('project_members');
+        $this->forge->createTable('departments');
     }
 
     public function down()
     {
-        $this->forge->dropTable('project_members');
+        $this->forge->dropTable('departments');
     }
 }

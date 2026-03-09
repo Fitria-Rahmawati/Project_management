@@ -1,42 +1,55 @@
 <?php
 
 namespace App\Models;
-
 use CodeIgniter\Model;
 
 class UserModel extends Model
 {
     protected $table = 'users';
     protected $primaryKey = 'id';
-
     protected $allowedFields = [
-        'username',
-        'email',
-        'password',
-        'role_id',
-        'company_id',
-        'is_active'
+        'username', 'email', 'password', 
+        'role_id', 'company_id', 'is_active',
+        'created_at', 'updated_at'
     ];
+    protected $useTimestamps = true;
 
-    public function getUserWithRole($email)
+   
+    public function role()
     {
-        return $this->select('users.*, roles.name as role_name')
-            ->join('roles', 'roles.id = users.role_id')
-            ->where('users.email', $email)
-            ->first();
+        return $this->belongsTo('App\Models\RoleModel', 'role_id');
     }
-    public function getUserWithCompany($email)
+
+    public function company()
     {
-        return $this->select('users.*, companies.company_name')
-            ->join('companies', 'companies.id = users.company_id')
-            ->where('users.email', $email)
-            ->first();
+        return $this->belongsTo('App\Models\CompanyModel', 'company_id');
     }
-    public function getUsersWithRoleCompany()
-{
-    return $this->select('users.*, roles.name as role_name, companies.company_name')
-        ->join('roles', 'roles.id = users.role_id', 'left')
-        ->join('companies', 'companies.id = users.company_id', 'left')
-        ->findAll();
-}
+
+    public function employee()
+    {
+        return $this->hasOne('App\Models\EmployeeModel', 'user_id');
+    }
+
+    public function projectMembers()
+    {
+        return $this->hasMany('App\Models\ProjectMemberModel', 'user_id');
+    }
+
+    public function getProjects()
+    {
+        return $this->hasManyThrough(
+            'App\Models\ProjectModel',
+            'App\Models\ProjectMemberModel',
+            'user_id',
+            'id',
+            'id',
+            'project_id'
+        );
+    }
+    
+    public function getFullName()
+    {
+        $employee = $this->employee;
+        return $employee ? $employee->first_name . ' ' . $employee->last_name : $this->username;
+    }
 }

@@ -5,7 +5,7 @@ use CodeIgniter\Model;
 
 class DepartementModel extends Model
 {
-    protected $table = 'departements';
+    protected $table = 'departments';
     protected $primaryKey = 'id';
     protected $allowedFields = [
         'departement_name','description','created_at','updated_at'

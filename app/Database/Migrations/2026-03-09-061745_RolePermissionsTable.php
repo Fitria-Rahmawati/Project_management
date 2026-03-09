@@ -17,6 +17,10 @@ class CreateRolePermissionsTable extends Migration
                 'type'     => 'INT',
                 'unsigned' => true,
             ],
+            'created_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ]
         ]);
 
         $this->forge->addForeignKey('role_id', 'roles', 'id', 'CASCADE', 'CASCADE');

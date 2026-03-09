@@ -48,6 +48,11 @@ class CreateEmplyeesTable extends Migration
                 'constraint' => 11,
                 'unsigned'   => true,
             ],
+            'user_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+            ],
             'hire_date' => [
                 'type' => 'DATE',
                 'null' => true,
@@ -84,6 +89,13 @@ class CreateEmplyeesTable extends Migration
         $this->forge->addForeignKey(
             'company_id',
             'companies',
+            'id',
+            'CASCADE',
+            'CASCADE'
+        );
+        $this->forge->addForeignKey(
+            'user_id',
+            'users',
             'id',
             'CASCADE',
             'CASCADE'
