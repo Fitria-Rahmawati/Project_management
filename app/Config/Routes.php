@@ -24,11 +24,13 @@ $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'auth']);
 // Tambahkan route untuk profile (berlaku untuk semua role)
 $routes->group('', ['filter' => 'auth'], function($routes) {
     $routes->get('profile', 'ProfileController::index');
+    $routes->get('profile/edit', 'ProfileController::edit');
     $routes->post('profile/update', 'ProfileController::update');
     $routes->get('profile/change-password', 'ProfileController::changePassword');
     $routes->post('profile/update-password', 'ProfileController::updatePassword');
-    
-    // Notifikasi
+    $routes->post('profile/upload-avatar', 'ProfileController::uploadAvatar');
+    $routes->get('profile/remove-avatar', 'ProfileController::removeAvatar');
+
     $routes->get('notifications', 'NotificationController::index');
     $routes->get('notifications/read/(:num)', 'NotificationController::read/$1');
 });
@@ -66,8 +68,13 @@ $routes->group('superadmin', ['filter' => 'role:superadmin'], function ($routes)
     $routes->get('roles/edit/(:num)', 'RoleController::edit/$1');
     $routes->post('roles/update/(:num)', 'RoleController::update/$1');
 
-    // Monitoring
-    $routes->get('monitoring', 'MonitoringController::index');
+      // Monitoring
+ $routes->group('monitoring', ['namespace' => 'App\Controllers\superadmin'], function($routes) {
+    $routes->get('/', 'MonitoringController::index');
+    $routes->get('data', 'MonitoringController::data');
+    $routes->get('chart', 'MonitoringController::chart');
+    $routes->get('monitoring/export', 'MonitoringController::export');
+ });
 });
 
 /*
@@ -187,6 +194,10 @@ $routes->group('admin', ['filter' => 'role:admin'], function ($routes) {
         $routes->get('team', 'ReportController::team');
         $routes->get('clients', 'ReportController::clients');
         $routes->get('export/(:any)', 'ReportController::export/$1');
+        $routes->get('print-team', 'ReportController::printTeam');
+        $routes->get('print-projects', 'ReportController::printProjects');
+        $routes->get('print-issues', 'ReportController::printIssues');
+        $routes->get('print-clients', 'ReportController::printClients');
     });
 });
 

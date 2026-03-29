@@ -2,247 +2,303 @@
 <?= $this->section('content') ?>
 
 <style>
-    .team-card {
-        border: none;
-        border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        transition: transform 0.3s;
-        margin-bottom: 20px;
-    }
-    .team-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    }
-    .team-avatar {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        font-weight: 600;
-        margin-right: 15px;
-    }
-    .team-info {
-        flex: 1;
-    }
-    .team-name {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 5px;
-    }
-    .team-role {
-        font-size: 12px;
-        color: #667eea;
-        background: #f0f3ff;
-        padding: 3px 10px;
-        border-radius: 15px;
-        display: inline-block;
-    }
-    .stat-label {
-        font-size: 11px;
-        color: #888;
-        margin-bottom: 5px;
-    }
-    .stat-value {
-        font-size: 18px;
-        font-weight: 600;
-        color: #333;
-    }
-    .progress {
-        height: 6px;
-        border-radius: 3px;
-        background: #f0f0f0;
-    }
-    .progress-bar {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 3px;
-    }
-    .summary-card {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
+    .report-header {
+        background: white;
         border-radius: 15px;
         padding: 20px;
         margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
-    .badge-status {
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 500;
+    .report-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 5px;
     }
-    .table-report {
+    .report-subtitle {
+        color: #888;
         font-size: 14px;
     }
     .filter-card {
         background: white;
         border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
         padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .summary-stats {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 25px;
+    }
+    .stat-box {
+        background: white;
+        border-radius: 12px;
+        padding: 15px 20px;
+        flex: 1;
+        min-width: 150px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+    }
+    .stat-box .stat-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+    }
+    .stat-box .stat-label {
+        font-size: 13px;
+        color: #888;
+        margin-top: 5px;
+    }
+    .report-table {
+        font-size: 14px;
+    }
+    .badge-completion-high {
+        background: #28a745;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        display: inline-block;
+    }
+    .badge-completion-medium {
+        background: #ffc107;
+        color: #333;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        display: inline-block;
+    }
+    .badge-completion-low {
+        background: #dc3545;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        display: inline-block;
+    }
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+    
+    @media print {
+        .no-print, .filter-card, .export-buttons, .btn, nav, .sidebar, footer {
+            display: none !important;
+        }
+        body, .container, .container-fluid, .main-content, #content {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            width: 100% !important;
+        }
+        .report-header {
+            box-shadow: none;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            page-break-after: avoid;
+        }
+        .summary-stats {
+            display: flex;
+            gap: 15px;
+            page-break-inside: avoid;
+        }
+        
+        .stat-box {
+            border: 1px solid #ddd;
+            box-shadow: none;
+            page-break-inside: avoid;
+        }
+        
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .report-table th, .report-table td {
+            border: 1px solid #000 !important;
+        }
+        .badge-completion-high, .badge-completion-medium, .badge-completion-low {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+        .rounded-circle {
+            border: 1px solid #ddd;
+            background-color: #f0f0f0 !important;
+            color: #333 !important;
+        }
+    
+        .card-footer {
+            border-top: 1px solid #ddd;
+            margin-top: 20px;
+            padding: 10px;
+        }
     }
 </style>
 
 <div class="container-fluid px-0">
-    <div class="card shadow mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="fas fa-users me-2 text-primary"></i>
-                <?= $title ?>
-            </h5>
+  
+    <div class="report-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div>
-                <a href="<?= base_url('admin/reports/export/team') ?>" class="btn btn-success btn-sm me-2">
-                    <i class="fas fa-file-export me-2"></i>Export CSV
+                <div class="report-title">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>
+                    Laporan Kinerja Tim
+                </div>
+                <div class="report-subtitle">
+                    Periode: <?= date('d F Y') ?> | Total <?= count($staff) ?> anggota tim aktif
+                </div>
+            </div>
+            <div class="export-buttons no-print">
+                <a href="<?= base_url('admin/reports/export/team') ?>" class="btn btn-sm btn-success">
+                    <i class="fas fa-file-excel me-2"></i>Export Excel
                 </a>
-                <a href="<?= base_url('admin/reports') ?>" class="btn btn-secondary btn-sm">
+               <a href="<?= base_url('admin/reports/print-team') ?>" 
+       class="btn btn-sm btn-secondary" 
+       target="_blank">
+        <i class="fas fa-print me-2"></i>Cetak Laporan
+                <a href="<?= base_url('admin/reports') ?>" class="btn btn-sm btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Kembali
                 </a>
             </div>
         </div>
     </div>
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="summary-card">
-                <h6 class="mb-0">Total Staff</h6>
-                <h3 class="mt-2 mb-0"><?= count($staff) ?></h3>
-                <small>Anggota tim aktif</small>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="summary-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
-                <h6 class="mb-0">Total Tasks</h6>
-                <h3 class="mt-2 mb-0">
-                    <?= array_sum(array_column($staff, 'assigned_issues')) ?>
-                </h3>
-                <small>Semua task</small>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="summary-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
-                <h6 class="mb-0">Completed</h6>
-                <h3 class="mt-2 mb-0">
-                    <?= array_sum(array_column($staff, 'completed_issues')) + array_sum(array_column($staff, 'closed_issues')) ?>
-                </h3>
-                <small>Task selesai</small>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="summary-card" style="background: linear-gradient(135deg, #dc3545, #c82333);">
-                <h6 class="mb-0">Overdue</h6>
-                <h3 class="mt-2 mb-0">
-                    <?= array_sum(array_column($staff, 'overdue_issues')) ?>
-                </h3>
-                <small>Task terlambat</small>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <?php if(empty($staff)): ?>
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <i class="fas fa-users-slash fa-4x text-muted mb-3"></i>
-                    <p class="text-muted">Belum ada data staff</p>
+
+    <div class="filter-card no-print">
+        <form method="get" action="<?= base_url('admin/reports/team') ?>">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Periode</label>
+                    <select name="period" class="form-select form-select-sm">
+                        <option value="all" <?= ($period ?? 'all') == 'all' ? 'selected' : '' ?>>Semua Waktu</option>
+                        <option value="this_month" <?= ($period ?? '') == 'this_month' ? 'selected' : '' ?>>Bulan Ini</option>
+                        <option value="last_month" <?= ($period ?? '') == 'last_month' ? 'selected' : '' ?>>Bulan Lalu</option>
+                        <option value="this_year" <?= ($period ?? '') == 'this_year' ? 'selected' : '' ?>>Tahun Ini</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Departemen</label>
+                    <select name="department" class="form-select form-select-sm">
+                        <option value="">Semua Departemen</option>
+                        <?php foreach($departments ?? [] as $dept): ?>
+                            <option value="<?= $dept['id'] ?>" <?= ($filter_dept ?? '') == $dept['id'] ? 'selected' : '' ?>>
+                                <?= $dept['department_name'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Posisi</label>
+                    <select name="position" class="form-select form-select-sm">
+                        <option value="">Semua Posisi</option>
+                        <?php foreach($positions ?? [] as $pos): ?>
+                            <option value="<?= $pos['id'] ?>" <?= ($filter_pos ?? '') == $pos['id'] ? 'selected' : '' ?>>
+                                <?= $pos['position_name'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-filter me-2"></i>Terapkan Filter
+                    </button>
                 </div>
             </div>
-        <?php else: ?>
-            <?php foreach($staff as $member): ?>
-                <div class="col-md-6 col-lg-4">
-                    <div class="card team-card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="team-avatar">
-                                    <?= strtoupper(substr($member['first_name'] ?? $member['username'], 0, 1)) ?>
-                                </div>
-                                <div class="team-info">
-                                    <div class="team-name">
-                                        <?= $member['first_name'] ?? $member['username'] ?> <?= $member['last_name'] ?? '' ?>
-                                    </div>
-                                    <div class="team-role"><?= $member['position_name'] ?? 'Staff' ?></div>
-                                    <small class="text-muted d-block mt-1"><?= $member['email'] ?></small>
-                                </div>
-                            </div>
-                            <div class="row text-center mb-3">
-                                <div class="col-4">
-                                    <div class="stat-label">Assigned</div>
-                                    <div class="stat-value"><?= $member['assigned_issues'] ?></div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="stat-label">Completed</div>
-                                    <div class="stat-value text-success"><?= $member['completed_issues'] + $member['closed_issues'] ?></div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="stat-label">Overdue</div>
-                                    <div class="stat-value text-danger"><?= $member['overdue_issues'] ?></div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <small class="text-muted">Completion Rate</small>
-                                    <small class="text-primary fw-bold"><?= $member['completion_rate'] ?>%</small>
-                                </div>
-                                <div class="progress">
-                                    <div class="progress-bar" style="width: <?= $member['completion_rate'] ?>%"></div>
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    <i class="fas fa-clock me-1"></i> Total Hours: <?= $member['total_hours'] ?? 0 ?>
-                                </small>
-                                <span class="badge-status bg-info">
-                                    <?= ucfirst($member['role_name'] ?? 'staff') ?>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+        </form>
     </div>
-    <div class="card shadow mt-4">
-        <div class="card-header">
+
+    <div class="summary-stats">
+        <div class="stat-box">
+            <div class="stat-number"><?= count($staff) ?></div>
+            <div class="stat-label">Total Staff</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number"><?= array_sum(array_column($staff, 'assigned_issues')) ?></div>
+            <div class="stat-label">Total Tugas</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number text-success"><?= array_sum(array_column($staff, 'completed_issues')) + array_sum(array_column($staff, 'closed_issues')) ?></div>
+            <div class="stat-label">Tugas Selesai</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number text-danger"><?= array_sum(array_column($staff, 'overdue_issues')) ?></div>
+            <div class="stat-label">Tugas Terlambat</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number"><?= round(array_sum(array_column($staff, 'completion_rate')) / max(1, count($staff)), 1) ?>%</div>
+            <div class="stat-label">Rata-rata Completion</div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white no-print">
             <h6 class="mb-0"><i class="fas fa-table me-2"></i>Detail Kinerja Tim</h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover table-report">
+                <table class="table table-bordered table-hover report-table mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Nama</th>
-                            <th>Email</th>
+                            <th>No</th>
+                            <th>Nama Staff</th>
                             <th>Posisi</th>
-                            <th>Assigned</th>
-                            <th>Completed</th>
-                            <th>Overdue</th>
-                            <th>Completion Rate</th>
-                            <th>Total Hours</th>
-                        </tr>
-                    </thead>
+                            <th>Departemen</th>
+                            <th class="text-center">Tugas</th>
+                            <th class="text-center">Selesai</th>
+                            <th class="text-center">Terlambat</th>
+                            <th class="text-center">Completion</th>
+                            <th class="text-center">Jam Kerja</th>
+                        </thead>
                     <tbody>
-                        <?php foreach($staff as $member): ?>
+                        <?php if(empty($staff)): ?>
                             <tr>
-                                <td>
-                                    <strong><?= $member['first_name'] ?? $member['username'] ?> <?= $member['last_name'] ?? '' ?></strong>
+                                <td colspan="9" class="text-center py-5 text-muted">
+                                    <i class="fas fa-chart-line fa-3x mb-3 d-block"></i>
+                                    Belum ada data kinerja tim
                                 </td>
-                                <td><?= $member['email'] ?></td>
-                                <td><?= $member['position_name'] ?? '-' ?></td>
-                                <td class="text-center"><?= $member['assigned_issues'] ?></td>
-                                <td class="text-center text-success"><?= $member['completed_issues'] + $member['closed_issues'] ?></td>
-                                <td class="text-center text-danger"><?= $member['overdue_issues'] ?></td>
-                                <td class="text-center">
-                                    <span class="badge bg-<?= $member['completion_rate'] >= 70 ? 'success' : ($member['completion_rate'] >= 50 ? 'warning' : 'danger') ?>">
-                                        <?= $member['completion_rate'] ?>%
-                                    </span>
-                                </td>
-                                <td class="text-center"><?= $member['total_hours'] ?? 0 ?></td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php else: ?>
+                            <?php foreach($staff as $i => $member): ?>
+                                <tr>
+                                    <td class="text-center"><?= $i+1 ?></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                                 style="width: 32px; height: 32px; font-size: 14px;">
+                                                <?= strtoupper(substr($member['first_name'] ?? $member['username'], 0, 1)) ?>
+                                            </div>
+                                            <div>
+                                                <strong><?= $member['first_name'] ?? $member['username'] ?> <?= $member['last_name'] ?? '' ?></strong>
+                                                <br>
+                                                <small class="text-muted"><?= $member['email'] ?></small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><?= $member['position_name'] ?? '-' ?></td>
+                                    <td><?= $member['department_name'] ?? '-' ?></td>
+                                    <td class="text-center"><?= $member['assigned_issues'] ?></td>
+                                    <td class="text-center text-success"><?= ($member['completed_issues'] ?? 0) + ($member['closed_issues'] ?? 0) ?></td>
+                                    <td class="text-center text-danger"><?= $member['overdue_issues'] ?? 0 ?></td>
+                                    <td class="text-center">
+                                        <?php $rate = $member['completion_rate'] ?? 0; ?>
+                                        <span class="badge <?= $rate >= 70 ? 'badge-completion-high' : ($rate >= 50 ? 'badge-completion-medium' : 'badge-completion-low') ?>">
+                                            <?= $rate ?>%
+                                        </span>
+                                    </td>
+                                    <td class="text-center"><?= $member['total_hours'] ?? 0 ?> jam</td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div class="card-footer bg-white text-muted small no-print">
+            <i class="fas fa-info-circle me-1"></i> Laporan ini mencakup semua tugas yang telah diassign kepada staff.
+            Completion Rate dihitung dari (tugas selesai / total tugas) × 100%.
         </div>
     </div>
 </div>

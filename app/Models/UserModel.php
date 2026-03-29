@@ -52,4 +52,72 @@ class UserModel extends Model
         $employee = $this->employee;
         return $employee ? $employee->first_name . ' ' . $employee->last_name : $this->username;
     }
+        
+    public function getAllWithRelations()
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('users');
+        $builder->select('users.*, roles.name as role_name, companies.company_name');
+        $builder->join('roles', 'roles.id = users.role_id', 'left');
+        $builder->join('companies', 'companies.id = users.company_id', 'left');
+        $builder->orderBy('users.id', 'DESC');
+        
+        return $builder->get()->getResultArray();
+    }
+
+    public function getUsersByRole($roleId)
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('users');
+        $builder->select('users.*, roles.name as role_name, companies.company_name');
+        $builder->join('roles', 'roles.id = users.role_id', 'left');
+        $builder->join('companies', 'companies.id = users.company_id', 'left');
+        
+        if ($roleId) {
+            $builder->where('users.role_id', $roleId);
+        }
+        
+        return $builder->get()->getResultArray();
+    }
+
+    public function getUsersByStatus($isActive)
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('users');
+        $builder->select('users.*, roles.name as role_name, companies.company_name');
+        $builder->join('roles', 'roles.id = users.role_id', 'left');
+        $builder->join('companies', 'companies.id = users.company_id', 'left');
+        $builder->where('users.is_active', $isActive);
+        
+        return $builder->get()->getResultArray();
+    }
+
+     public function getUsersWithRoleCompany($keyword = null, $companyType = null)
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('users');
+        
+        $builder->select('
+            users.*, 
+            roles.name as role_name, 
+            companies.company_name,
+            companies.company_type
+        ');
+        $builder->join('roles', 'roles.id = users.role_id', 'left');
+        $builder->join('companies', 'companies.id = users.company_id', 'left');
+        if ($keyword) {
+            $builder->groupStart()
+                ->like('users.username', $keyword)
+                ->orLike('users.email', $keyword)
+                ->groupEnd();
+        }
+        if ($companyType) {
+            $builder->where('companies.company_type', $companyType);
+        }
+        
+        $builder->orderBy('users.id', 'DESC');
+        
+        return $builder->get()->getResultArray();
+    }
+
 }
