@@ -343,7 +343,7 @@
                     <?php endif; ?>
                 </tbody>
             </table>
-        </div>
+                </div>
 
         <!-- Pagination -->
         <?php if(isset($pager)): ?>

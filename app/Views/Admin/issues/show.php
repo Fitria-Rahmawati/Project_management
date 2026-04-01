@@ -255,17 +255,17 @@
                         <div class="timeline">
                             <?php foreach($issue['logs'] as $log): ?>
                                 <div class="timeline-item">
-                                    <?php if($log['field_name']): ?>
+                                    <?php if($log['new_status']): ?>
                                         <!-- Status/Field Change -->
                                         <div class="activity-item">
                                             <span class="activity-user"><?= $log['user_name'] ?></span>
-                                            <span class="activity-time"><?= date('d M H:i', strtotime($log['created_at'])) ?></span>
+                                            <span class="activity-time"><?= date('d M H:i', strtotime($log['changed_at'])) ?></span>
                                             <div class="mt-2">
-                                                <span class="activity-field"><?= $log['field_name'] ?></span>
+                                                <span class="activity-field"><?= $log['new_status'] ?></span>
                                                 berubah dari 
-                                                <span class="text-muted">"<?= $log['old_value'] ?>"</span> 
+                                                <span class="text-muted">"<?= $log['old_status'] ?>"</span> 
                                                 menjadi 
-                                                <span class="text-primary">"<?= $log['new_value'] ?>"</span>
+                                                <span class="text-primary">"<?= $log['new_status'] ?>"</span>
                                             </div>
                                         </div>
                                     <?php else: ?>

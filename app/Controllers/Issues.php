@@ -87,7 +87,7 @@ class Issues extends BaseController
         $issue = $this->issue->getIssueWithDetails($id);
 
         if (!$issue) {
-            return redirect()->to('/admin/issues')
+            return redirect()->to('admin/issues')
                 ->with('error', 'Issue tidak ditemukan');
         }
         $data = [
@@ -149,11 +149,11 @@ class Issues extends BaseController
         $this->db->table('issue_logs')->insert([
             'issue_id' => $issueId,
             'change_by' => session()->get('user_id'),
-            'field_name' => 'status',
-            'old_value' => '',
-            'new_value' => 'To Do',
+            'old_status' => '',
+            'new_status' => 'To Do',
+            'changed_by' => session()->get('user_id'),
             'comment' => 'Issue created',
-            'created_at' => date('Y-m-d H:i:s')
+            'changed_at' => date('Y-m-d H:i:s')
         ]);
         if ($data['assignee_id']) {
             $assigneeName = $this->user->find($data['assignee_id'])['username'];
@@ -171,29 +171,36 @@ class Issues extends BaseController
             ->with('success', 'Issue berhasil dibuat');
     }
 
-    public function edit($id)
-    {
-        $issue = $this->issue->find($id);
+public function edit($id)
+{
+    $issue = $this->issue->find($id);
 
-        if (!$issue) {
-            return redirect()->to('/admin/issues')
-                ->with('error', 'Issue tidak ditemukan');
-        }
-
-        $data = [
-            'title' => 'Edit Issue #' . $id,
-            'issue' => $issue,
-            'projects' => $this->project->findAll(),
-            'users' => $this->user->where('is_active', 1)->findAll(),
-            'parent_issues' => $this->issue->where('id !=', $id)
-                                          ->where('status !=', 'Closed')
-                                          ->where('project_id', $issue['project_id'])
-                                          ->findAll()
-        ];
-
-        return view('admin/issues/edit', $data);
+    if (!$issue) {
+        return redirect()->to('admin/issues')
+            ->with('error', 'Issue tidak ditemukan');
     }
 
+    $users = $this->db->table('users')
+        ->select('users.id, users.username, roles.name as role_name')
+        ->join('roles', 'roles.id = users.role_id')
+        ->where('users.is_active', 1)
+        ->orderBy('users.username', 'ASC')
+        ->get()
+        ->getResultArray();
+
+    $data = [
+        'title' => 'Edit Issue #' . $id,
+        'issue' => $issue,
+        'projects' => $this->project->findAll(),
+        'users' => $users,
+        'parent_issues' => $this->issue->where('id !=', $id)
+                                      ->where('status !=', 'Closed')
+                                      ->where('project_id', $issue['project_id'])
+                                      ->findAll()
+    ];
+
+    return view('admin/issues/edit', $data);
+}
     public function update($id)
     {
         $issue = $this->issue->find($id);

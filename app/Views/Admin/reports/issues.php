@@ -201,6 +201,14 @@
                         <?php endif; ?>
                     </tbody>
                 </table>
+                <?php if(empty($issues)): ?>
+                    <div class="text-center my-4">
+                        <i class="fas fa-exclamation-circle fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">
+                            Tidak ada issue yang ditemukan.
+                        </p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

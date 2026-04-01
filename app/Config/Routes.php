@@ -239,20 +239,42 @@ $routes->group('staff', ['filter' => 'role:staff'], function ($routes) {
     // Dashboard
     $routes->get('dashboard', 'Dashboard::index');
 
-    // Tasks
-    $routes->get('tasks', 'TaskController::index', [
+    // Tasks 
+    $routes->get('tasks', 'Staff\TaskController::index', [
         'filter' => 'permission:view_tasks'
     ]);
-
-    // Progress
-    $routes->get('progress', 'StaffProgressController::index', [
+    $routes->get('tasks/(:num)', 'Staff\TaskController::show/$1', [
+        'filter' => 'permission:view_tasks'
+    ]);
+    $routes->post('tasks/update-status/(:num)', 'Staff\TaskController::updateStatus/$1', [
+        'filter' => 'permission:update_progress'
+    ]);
+    $routes->post('tasks/comment/(:num)', 'Staff\TaskController::addComment/$1', [
+        'filter' => 'permission:view_tasks'
+    ]);
+    $routes->post('tasks/log-time/(:num)', 'Staff\TaskController::logTime/$1', [
         'filter' => 'permission:update_progress'
     ]);
 
-    // Issues
-    $routes->get('issues', 'StaffIssueController::index', [
-        'filter' => 'permission:update_issues'
+    // Issues 
+    $routes->get('issues', 'Staff\IssueController::index', [
+        'filter' => 'permission:view_issues'
     ]);
+    $routes->get('issues/create', 'Staff\IssueController::create', [
+        'filter' => 'permission:report_issue'
+    ]);
+    $routes->post('issues/store', 'Staff\IssueController::store', [
+        'filter' => 'permission:report_issue'
+    ]);
+
+    // Projects
+    $routes->get('projects', 'Staff\ProjectController::index', [
+        'filter' => 'permission:view_projects'
+    ]);
+    $routes->get('projects/(:num)', 'Staff\ProjectController::show/$1', [
+        'filter' => 'permission:view_projects'
+    ]);
+    
 });
 
 /*

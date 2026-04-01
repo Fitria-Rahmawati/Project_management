@@ -85,13 +85,25 @@ $isReportsActive = ($segment1 == 'admin' && $segment2 == 'reports');
     
         <?php if($role == 'staff'): ?>
         <div class="list-group-item bg-light fw-bold mt-2">Staff</div>
-        <a href="<?= base_url('staff/my-tasks') ?>" 
+        <a href="<?= base_url('staff/tasks') ?>" 
            class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'staff' && $segment2 == 'my-tasks') ? 'active bg-primary text-white' : '' ?>">
             <i class="fas fa-tasks me-2"></i> My Tasks
         </a>
-        <a href="<?= base_url('staff/my-projects') ?>" 
+        <a href="<?= base_url('staff/issues') ?>" 
+           class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'staff' && $segment2 == 'my-issues') ? 'active bg-primary text-white' : '' ?>">
+            <i class="fas fa-exclamation-circle me-2"></i> My Issues
+        </a>
+        <a href="<?= base_url('staff/projects') ?>" 
            class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'staff' && $segment2 == 'my-projects') ? 'active bg-primary text-white' : '' ?>">
             <i class="fas fa-project-diagram me-2"></i> My Projects
+        </a>
+        <a href="<?= base_url('staff/timesheets') ?>" 
+           class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'staff' && $segment2 == 'timesheets') ? 'active bg-primary text-white' : '' ?>">
+            <i class="fas fa-clock me-2"></i> Timesheets
+        </a>
+        <a href="<?= base_url('staff/reports') ?>" 
+           class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'staff' && $segment2 == 'reports') ? 'active bg-primary text-white' : '' ?>">
+            <i class="fas fa-chart-bar me-2"></i> My Reports
         </a>
         <?php endif; ?>
 

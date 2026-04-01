@@ -89,8 +89,14 @@ class AuthController extends BaseController
             $sessionData['department'] = $employee['department_name'];
         } else {
             if ($user['role_name'] == 'client') {
-                $company = $this->userModel->company()->find($user['company_id']);
+                // ✅ PERBAIKI: Ambil data company manual
+                $db = \Config\Database::connect();
+                $company = $db->table('companies')
+                    ->where('id', $user['company_id'])
+                    ->get()
+                    ->getRowArray();
                 $sessionData['full_name'] = $company ? $company['company_name'] : $user['username'];
+                $sessionData['company_name'] = $company ? $company['company_name'] : '';
             } else {
                 $sessionData['full_name'] = $user['username'];
             }

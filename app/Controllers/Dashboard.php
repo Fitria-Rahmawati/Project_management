@@ -52,10 +52,10 @@ class Dashboard extends BaseController
         }
 
         if ($role == 'client') {
-            $data['myProjects'] = $this->getClientProjects();
-            $data['projectProgress'] = $this->getProjectProgress();
-            return view('dashboard/client', $data);
-        }
+    $data['myProjects'] = $this->getClientProjects();
+    $data['projectProgress'] = $this->getProjectProgress();
+    return view('dashboard/client', $data); 
+}
 
         return redirect()->to('/login');
     }
