@@ -69,9 +69,9 @@ $initial = strtoupper(substr($fullName, 0, 1));
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?= uri_string() == 'client/reports' ? 'active' : '' ?>" 
-                       href="<?= base_url('client/reports') ?>">
-                        <i class="fas fa-chart-bar me-1"></i> Reports
+                    <a class="nav-link <?= uri_string() == 'client/progress' ? 'active' : '' ?>" 
+                       href="<?= base_url('client/progress') ?>">
+                        <i class="fas fa-chart-line me-1"></i> Progress
                     </a>
                 </li>
                 <?php endif; ?>

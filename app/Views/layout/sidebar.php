@@ -97,26 +97,24 @@ $isReportsActive = ($segment1 == 'admin' && $segment2 == 'reports');
            class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'staff' && $segment2 == 'my-projects') ? 'active bg-primary text-white' : '' ?>">
             <i class="fas fa-project-diagram me-2"></i> My Projects
         </a>
-        <a href="<?= base_url('staff/timesheets') ?>" 
-           class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'staff' && $segment2 == 'timesheets') ? 'active bg-primary text-white' : '' ?>">
-            <i class="fas fa-clock me-2"></i> Timesheets
-        </a>
-        <a href="<?= base_url('staff/reports') ?>" 
-           class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'staff' && $segment2 == 'reports') ? 'active bg-primary text-white' : '' ?>">
-            <i class="fas fa-chart-bar me-2"></i> My Reports
-        </a>
+        
         <?php endif; ?>
 
         <?php if($role == 'client'): ?>
         <div class="list-group-item bg-light fw-bold mt-2">Client</div>
-        <a href="<?= base_url('client/my-projects') ?>" 
+        <a href="<?= base_url('client/projects') ?>" 
            class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'client' && $segment2 == 'my-projects') ? 'active bg-primary text-white' : '' ?>">
             <i class="fas fa-eye me-2"></i> My Projects
         </a>
-        <a href="<?= base_url('client/reports') ?>" 
-           class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'client' && $segment2 == 'reports') ? 'active bg-primary text-white' : '' ?>">
+        <a href="<?= base_url('client/progress') ?>" 
+           class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'client' && $segment2 == 'progress') ? 'active bg-primary text-white' : '' ?>">
             <i class="fas fa-chart-bar me-2"></i> Progress Reports
         </a>
+          <li class="nav-item">
+        <a class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'client' && $segment2 == 'issues') ? 'active bg-primary text-white' : '' ?>">
+            <i class="fas fa-exclamation-triangle"></i> Kendala
+        </a>
+    </li>
         <?php endif; ?>
 
   

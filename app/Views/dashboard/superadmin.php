@@ -95,6 +95,7 @@
         color: #dddfeb;
         opacity: 0.8;
     }
+
     .section-title {
         margin: 35px 0 20px 0;
         font-weight: 700;
@@ -106,6 +107,100 @@
         color: var(--primary);
         margin-right: 8px;
     }
+
+    /* Contract Alert Cards */
+    .contract-alert {
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    .contract-alert-warning {
+        background: #fff3e0;
+        border-left: 5px solid var(--warning);
+    }
+    .contract-alert-danger {
+        background: #fee2e2;
+        border-left: 5px solid var(--danger);
+    }
+    .contract-alert i {
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+    .contract-alert .alert-content {
+        flex: 1;
+    }
+    .contract-alert .alert-title {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    .contract-alert .alert-desc {
+        font-size: 0.85rem;
+        color: #666;
+    }
+    .contract-alert .alert-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    /* Contract Cards Row */
+    .contract-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }
+    .contract-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        overflow: hidden;
+    }
+    .contract-card-header {
+        padding: 15px 20px;
+        font-weight: 700;
+        color: white;
+    }
+    .contract-card-header.warning { background: var(--warning); color: #333; }
+    .contract-card-header.danger { background: var(--danger); }
+    .contract-card-body {
+        padding: 15px 20px;
+    }
+    .contract-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .contract-list li {
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .contract-list li:last-child {
+        border-bottom: none;
+    }
+    .contract-name {
+        font-weight: 600;
+        color: var(--dark-text);
+    }
+    .contract-date {
+        font-size: 0.75rem;
+        color: #858796;
+    }
+    .contract-badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    .contract-badge-warning { background: #fff3e0; color: var(--warning); }
+    .contract-badge-danger { background: #fee2e2; color: var(--danger); }
 
     .shortcut-grid {
         display: grid;
@@ -149,6 +244,7 @@
     .btn-quick span {
         font-size: 0.9rem;
     }
+
     .recent-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -248,6 +344,9 @@
         .stats-grid {
             grid-template-columns: 1fr;
         }
+        .contract-cards {
+            grid-template-columns: 1fr;
+        }
         .shortcut-grid {
             grid-template-columns: repeat(2, 1fr);
         }
@@ -261,6 +360,7 @@
 
 <main class="dashboard-content">
 
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
         <div>
             <h2 class="welcome-text">
@@ -276,6 +376,30 @@
         </div>
     </div>
 
+    <!-- Alert Kontrak -->
+    <?php if(!empty($expiringContracts)): ?>
+        <div class="contract-alert contract-alert-warning">
+            <i class="fas fa-clock text-warning"></i>
+            <div class="alert-content">
+                <div class="alert-title">Peringatan Kontrak Akan Berakhir</div>
+                <div class="alert-desc">Terdapat <?= count($expiringContracts) ?> client yang kontraknya akan berakhir dalam 30 hari.</div>
+            </div>
+            <a href="<?= base_url('superadmin/companies') ?>" class="alert-link">Lihat Detail →</a>
+        </div>
+    <?php endif; ?>
+
+    <?php if(!empty($expiredContracts)): ?>
+        <div class="contract-alert contract-alert-danger">
+            <i class="fas fa-ban text-danger"></i>
+            <div class="alert-content">
+                <div class="alert-title">Kontrak Telah Berakhir</div>
+                <div class="alert-desc">Terdapat <?= count($expiredContracts) ?> client yang kontraknya sudah berakhir dan tidak dapat login.</div>
+            </div>
+            <a href="<?= base_url('superadmin/companies') ?>" class="alert-link">Lihat Detail →</a>
+        </div>
+    <?php endif; ?>
+
+    <!-- Statistik Cards -->
     <div class="stats-grid">
         <div class="stat-card companies">
             <div class="stat-info">
@@ -318,6 +442,77 @@
         </div>
     </div>
 
+    <!-- Contract Monitoring Cards -->
+    <div class="contract-cards">
+        <div class="contract-card">
+            <div class="contract-card-header warning">
+                <i class="fas fa-clock me-2"></i> Kontrak Akan Berakhir
+            </div>
+            <div class="contract-card-body">
+                <?php if(!empty($expiringContracts)): ?>
+                    <ul class="contract-list">
+                        <?php foreach(array_slice($expiringContracts, 0, 5) as $contract): ?>
+                            <li>
+                                <div>
+                                    <div class="contract-name"><?= $contract['company_name'] ?></div>
+                                    <div class="contract-date">Berakhir: <?= date('d/m/Y', strtotime($contract['contract_end'])) ?></div>
+                                </div>
+                                <span class="contract-badge contract-badge-warning">
+                                    <?php 
+                                    $daysLeft = floor((strtotime($contract['contract_end']) - time()) / (60 * 60 * 24));
+                                    echo "Sisa $daysLeft hari";
+                                    ?>
+                                </span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <?php if(count($expiringContracts) > 5): ?>
+                        <div class="text-center mt-2">
+                            <small class="text-muted">+ <?= count($expiringContracts) - 5 ?> client lainnya</small>
+                        </div>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <div class="text-center text-success py-3">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <p class="mb-0">Semua kontrak dalam keadaan baik</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="contract-card">
+            <div class="contract-card-header danger">
+                <i class="fas fa-ban me-2"></i> Kontrak Berakhir
+            </div>
+            <div class="contract-card-body">
+                <?php if(!empty($expiredContracts)): ?>
+                    <ul class="contract-list">
+                        <?php foreach(array_slice($expiredContracts, 0, 5) as $contract): ?>
+                            <li>
+                                <div>
+                                    <div class="contract-name"><?= $contract['company_name'] ?></div>
+                                    <div class="contract-date">Berakhir: <?= date('d/m/Y', strtotime($contract['contract_end'])) ?></div>
+                                </div>
+                                <span class="contract-badge contract-badge-danger">Expired</span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <?php if(count($expiredContracts) > 5): ?>
+                        <div class="text-center mt-2">
+                            <small class="text-muted">+ <?= count($expiredContracts) - 5 ?> client lainnya</small>
+                        </div>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <div class="text-center text-success py-3">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <p class="mb-0">Tidak ada kontrak yang berakhir</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access -->
     <div class="section-title">
         <i class="fas fa-bolt"></i> Quick Access
     </div>
@@ -344,6 +539,7 @@
         </a>
     </div>
 
+    <!-- Recent Activity -->
     <div class="section-title">
         <i class="fas fa-history"></i> Recent Activity
     </div>

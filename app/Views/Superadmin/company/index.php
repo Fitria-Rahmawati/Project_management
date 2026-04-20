@@ -44,6 +44,22 @@
         background-color: #6c757d;
         color: white;
     }
+    .badge.bg-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    .badge.bg-dark {
+        background-color: #343a40;
+        color: white;
+    }
+    .contract-expiring {
+        background-color: #ffc107;
+        color: #333;
+    }
+    .contract-expired {
+        background-color: #dc3545;
+        color: white;
+    }
 </style>
 
 <main class="content">
@@ -73,6 +89,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <?php endif; ?>
+            
             <div class="filter-section">
                 <input type="text" id="searchCompany" placeholder="Cari nama perusahaan..." onkeyup="filterTable()">
                 <select id="statusFilter" onchange="filterTable()">
@@ -86,6 +103,7 @@
                     <option value="client">Client</option>
                 </select>
             </div>
+            
             <div class="table-responsive">
                 <table class="table table-bordered table-hover" id="companiesTable">
                     <thead class="table-light">
@@ -96,14 +114,16 @@
                             <th>Contact Person</th>
                             <th>Email</th>
                             <th>Telepon</th>
+                            <th>Masa Kontrak</th>     
+                            <th>Status Kontrak</th>    
                             <th>Status</th>
-                            <th width="150">Aksi</th>
+                            <th width="180">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if(empty($companies)): ?>
                             <tr>
-                                <td colspan="8" class="text-center py-4">
+                                <td colspan="10" class="text-center py-4">
                                     <i class="fas fa-building fa-3x text-muted mb-3"></i>
                                     <p class="text-muted">Belum ada data perusahaan</p>
                                     <a href="<?= base_url('superadmin/companies/create') ?>" class="btn btn-primary btn-sm">
@@ -128,27 +148,84 @@
                                 <td><?= $company['contact_person'] ?? '-' ?></td>
                                 <td><?= $company['email'] ?? '-' ?></td>
                                 <td><?= $company['phone'] ?? '-' ?></td>
+                                
+                              
+                                <td>
+                                    <?php if(!empty($company['contract_start']) && !empty($company['contract_end'])): ?>
+                                        <?= date('d/m/Y', strtotime($company['contract_start'])) ?> - 
+                                        <?= date('d/m/Y', strtotime($company['contract_end'])) ?>
+                                        <br>
+                                        <small class="text-muted">
+                                            <?php 
+                                            $daysLeft = floor((strtotime($company['contract_end']) - time()) / (60 * 60 * 24));
+                                            if($daysLeft >= 0 && $daysLeft <= 30):
+                                            ?>
+                                                <span class="text-warning">⏰ Sisa <?= $daysLeft ?> hari</span>
+                                            <?php elseif($daysLeft < 0): ?>
+                                                <span class="text-danger">⚠️ Terlambat <?= abs($daysLeft) ?> hari</span>
+                                            <?php endif; ?>
+                                        </small>
+                                    <?php else: ?>
+                                        <span class="text-muted">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                
+                                <td>
+                                    <?php 
+                                    $statusClass = '';
+                                    $statusText = '';
+                                    switch($company['contract_status']) {
+                                        case 'active':
+                                            $statusClass = 'bg-success';
+                                            $statusText = 'Aktif';
+                                            break;
+                                        case 'expiring_soon':
+                                            $statusClass = 'bg-warning text-dark';
+                                            $statusText = 'Akan Berakhir';
+                                            break;
+                                        case 'expired':
+                                            $statusClass = 'bg-danger';
+                                            $statusText = 'Berakhir';
+                                            break;
+                                        case 'renewed':
+                                            $statusClass = 'bg-info';
+                                            $statusText = 'Diperpanjang';
+                                            break;
+                                        default:
+                                            $statusClass = 'bg-secondary';
+                                            $statusText = '-';
+                                    }
+                                    ?>
+                                    <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
+                                </td>
+                                
+                              
                                 <td>
                                     <?php if ($company['is_active']): ?>
                                         <span class="badge bg-success">Aktif</span>
                                     <?php else: ?>
                                         <span class="badge bg-secondary">Nonaktif</span>
                                     <?php endif; ?>
-                                </td>
+                                 </td>
+                                
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
+                                        <a href="<?= base_url('superadmin/companies/' . $company['id']) ?>"
+                                           class="btn btn-sm btn-info" title="Detail">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
                                         <a href="<?= base_url('superadmin/companies/edit/' . $company['id']) ?>"
                                            class="btn btn-sm btn-warning" title="Edit">
-                                            <i class="fas fa-edit"></i> Edit
+                                            <i class="fas fa-edit"></i>
                                         </a>
                                         <a href="<?= base_url('superadmin/companies/delete/' . $company['id']) ?>"
                                            onclick="return confirm('Yakin ingin menghapus perusahaan ini?')"
                                            class="btn btn-sm btn-danger" title="Hapus">
-                                            <i class="fas fa-trash"></i> Hapus
+                                            <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
-                                </td>
-                            </tr>
+                                    </td>
+                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
@@ -169,7 +246,8 @@ function filterTable() {
     for (let i = 1; i < rows.length; i++) { 
         const companyName = rows[i].getElementsByTagName('td')[1]?.textContent.toLowerCase() || '';
         const companyType = rows[i].getElementsByTagName('td')[2]?.textContent.toLowerCase() || '';
-        const companyStatus = rows[i].getElementsByTagName('td')[6]?.textContent.toLowerCase() || '';
+        const companyStatus = rows[i].getElementsByTagName('td')[8]?.textContent.toLowerCase() || '';
+        
         const matchesSearch = companyName.includes(searchInput);
         let matchesType = true;
         if (typeFilter !== 'all') {

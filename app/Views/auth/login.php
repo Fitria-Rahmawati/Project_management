@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Project Management System</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         * {
             margin: 0;
@@ -247,6 +249,11 @@
             color: #764ba2;
             text-decoration: underline;
         }
+        .captcha-wrapper {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
         @media (max-width: 480px) {
             .login-container {
                 padding: 30px 20px;
@@ -284,6 +291,14 @@
                 <?= session()->getFlashdata('success') ?>
             </div>
         <?php endif; ?>
+
+        <?php if(session()->getFlashdata('captcha_error')): ?>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <?= session()->getFlashdata('captcha_error') ?>
+            </div>
+        <?php endif; ?>
+
         <form action="<?= base_url('login/process') ?>" method="post">
             <?= csrf_field() ?>
 
@@ -315,6 +330,10 @@
                         required
                     >
                 </div>
+            </div>
+
+            <div class="captcha-wrapper">
+                <div class="g-recaptcha" data-sitekey="<?= getenv('GOOGLE_RECAPTCHA_SITE_KEY') ?>"></div>
             </div>
 
             <div class="form-options">

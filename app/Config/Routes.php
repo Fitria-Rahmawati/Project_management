@@ -49,6 +49,7 @@ $routes->group('superadmin', ['filter' => 'role:superadmin'], function ($routes)
     $routes->get('companies', 'CompanyController::index');
     $routes->get('companies/create', 'CompanyController::create');
     $routes->post('companies/store', 'CompanyController::store');
+    $routes->get('companies/(:num)', 'CompanyController::show/$1');
     $routes->get('companies/edit/(:num)', 'CompanyController::edit/$1');
     $routes->post('companies/update/(:num)', 'CompanyController::update/$1');
     $routes->get('companies/delete/(:num)', 'CompanyController::delete/$1');
@@ -213,18 +214,37 @@ $routes->group('client', ['filter' => 'role:client'], function ($routes) {
     $routes->get('dashboard', 'Dashboard::index');
 
     // Projects
-    $routes->get('projects', 'ClientProjectController::index', [
+    $routes->get('projects', 'Client\ProjectController::index', [
         'filter' => 'permission:view_projects'
     ]);
+    $routes->get('projects/(:num)', 'Client\ProjectController::show/$1', [
+        'filter' => 'permission:view_projects'
+    ]);
+   $routes->post('projects/comment/(:num)', 'Client\ProjectController::addComment/$1'); 
 
     // Progress
-    $routes->get('progress', 'ClientProgressController::index', [
-        'filter' => 'permission:view_progress'
+    $routes->get('progress', 'Client\ProgressController::index', [
+        'filter' => 'permission:view_progress_reports'
+    ]);
+    $routes->get('progress/detail/(:num)', 'Client\ProgressController::detail/$1', [
+        'filter' => 'permission:view_progress_reports'
     ]);
 
     // Issues
-    $routes->get('issues', 'ClientIssueController::index', [
-        'filter' => 'permission:create_issues'
+    $routes->get('issues', 'Client\IssueController::index', [
+        'filter' => 'permission:view_issues'
+    ]);
+    $routes->get('issues/create', 'Client\IssueController::create', [
+        'filter' => 'permission:report_issue'
+    ]);
+    $routes->post('issues/store', 'Client\IssueController::store', [ 
+        'filter' => 'permission:report_issue'
+    ]);
+    $routes->get('issues/(:num)', 'Client\IssueController::show/$1', [
+        'filter' => 'permission:view_issues'
+    ]);
+    $routes->get('issues/edit/(:num)', 'Client\IssueController::edit/$1', [
+        'filter' => 'permission:report_issue' 
     ]);
 });
 

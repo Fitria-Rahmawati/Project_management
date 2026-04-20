@@ -2,13 +2,14 @@
 
 namespace App\Controllers;
 
+use App\Models\CompanyModel;
+
 class Dashboard extends BaseController
 {
     public function index()
     {
         $role = session()->get('role');
 
-        // Data dasar untuk semua dashboard
         $data = [
             'title' => 'Dashboard',
             'username' => session()->get('username'),
@@ -35,38 +36,68 @@ class Dashboard extends BaseController
             return view('dashboard/admin', $data); 
         }
 
-  
+        // Dashboard SUPERADMIN
         if ($role == 'superadmin') {
+            $companyModel = new CompanyModel();
+            
             $data['totalUsers'] = $this->getTotalUsers();
             $data['totalProjects'] = $this->getTotalProjects();
             $data['totalIssues'] = $this->getTotalIssues();
             $data['totalCompanies'] = $this->getTotalCompanies();
             $data['activeUsers'] = $this->getActiveUsers();
+            
+            $data['expiringContracts'] = $companyModel->getExpiringSoonClients();
+            $data['expiredContracts'] = $companyModel->getExpiredClients();
+            
+            $data['recentUsers'] = $this->getRecentUsers();
+            $data['recentCompanies'] = $this->getRecentCompanies();
+            
             return view('dashboard/superadmin', $data);
         }
 
+        // Dashboard STAFF
         if ($role == 'staff') {
             $data['myTasks'] = $this->getMyTasks();
             $data['myProjects'] = $this->getMyProjects();
             return view('dashboard/staff', $data);
         }
 
+        // Dashboard CLIENT
         if ($role == 'client') {
-    $data['myProjects'] = $this->getClientProjects();
-    $data['projectProgress'] = $this->getProjectProgress();
-    return view('dashboard/client', $data); 
-}
+            $data['myProjects'] = $this->getClientProjects();
+            $data['projectProgress'] = $this->getProjectProgress();
+            $data['recentActivities'] = $this->getClientActivities();
+            return view('dashboard/client', $data); 
+        }
 
         return redirect()->to('/login');
     }
 
+    // ================= HELPER METHODS =================
 
     private function getTotalUsers()
     {
         $db = \Config\Database::connect();
         return $db->table('users')->countAllResults();
     }
-
+private function getClientActivities($limit = 10)
+{
+    $userId = session()->get('user_id');
+    $db = \Config\Database::connect();
+    
+    $tableExists = $db->query("SHOW TABLES LIKE 'activity_logs'")->getRow();
+    
+    if (!$tableExists) {
+        return [];
+    }
+    
+    return $db->table('activity_logs')
+        ->where('user_id', $userId)
+        ->orderBy('created_at', 'DESC')
+        ->limit($limit)
+        ->get()
+        ->getResultArray();
+}
     private function getTotalProjects()
     {
         $db = \Config\Database::connect();
@@ -105,7 +136,6 @@ class Dashboard extends BaseController
             ->countAllResults();
     }
 
- 
     private function getTotalEmployees()
     {
         $db = \Config\Database::connect();
@@ -254,5 +284,29 @@ class Dashboard extends BaseController
     {
         $db = \Config\Database::connect();
         return $db->table('companies')->countAllResults();
+    }
+
+  
+    private function getRecentUsers()
+    {
+        $db = \Config\Database::connect();
+        return $db->table('users')
+            ->select('id, username, email, is_active as status')
+            ->orderBy('created_at', 'DESC')
+            ->limit(5)
+            ->get()
+            ->getResultArray();
+    }
+
+   
+    private function getRecentCompanies()
+    {
+        $db = \Config\Database::connect();
+        return $db->table('companies')
+            ->select('id, company_name, email, is_active as status')
+            ->orderBy('created_at', 'DESC')
+            ->limit(5)
+            ->get()
+            ->getResultArray();
     }
 }
