@@ -37,6 +37,9 @@
                 <a href="<?= base_url('admin/reports/export/issues') ?>" class="btn btn-success btn-sm me-2">
                     <i class="fas fa-file-export me-2"></i>Export CSV
                 </a>
+                    <a href="<?= base_url('admin/reports/export-issues') ?>" class="btn btn-sm btn-danger" target="_blank">
+    <i class="fas fa-file-pdf"></i> PDF
+</a>
                 <a href="<?= base_url('admin/reports') ?>" class="btn btn-secondary btn-sm">
                     <i class="fas fa-arrow-left me-2"></i>Kembali
                 </a>

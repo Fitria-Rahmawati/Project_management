@@ -211,4 +211,66 @@ class ProgressController extends BaseController
         
         return array_slice($timeline, 0, 20);
     }
+      public function exportPdf()
+    {
+        $companyId = session()->get('company_id');
+
+        // Ambil semua proyek
+        $projects = $this->db->table('projects')
+            ->where('company_id', $companyId)
+            ->orderBy('created_at', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        // Hitung progress setiap proyek
+        foreach ($projects as &$p) {
+            $total = $this->db->table('issues')
+                ->where('project_id', $p['id'])
+                ->countAllResults();
+            $completed = $this->db->table('issues')
+                ->where('project_id', $p['id'])
+                ->where('status', 'Done')
+                ->countAllResults();
+            $p['progress'] = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+            $p['total_issues'] = $total;
+            $p['completed_issues'] = $completed;
+        }
+
+        // Statistik
+        $totalProjects = count($projects);
+        $avgProgress = $totalProjects > 0 ? round(array_sum(array_column($projects, 'progress')) / $totalProjects, 2) : 0;
+        $totalIssues = array_sum(array_column($projects, 'total_issues'));
+        $completedIssues = array_sum(array_column($projects, 'completed_issues'));
+
+        // Data untuk view
+        $data = [
+            'projects' => $projects,
+            'companyName' => session()->get('company_name') ?? 'Perusahaan Client',
+            'totalProjects' => $totalProjects,
+            'avgProgress' => $avgProgress,
+            'totalIssues' => $totalIssues,
+            'completedIssues' => $completedIssues,
+            'printDate' => date('d/m/Y H:i:s')
+        ];
+
+        // Load view menjadi HTML
+        $html = view('client/export/progress_pdf', $data);
+
+        // Konfigurasi DomPDF
+        $options = new \Dompdf\Options();
+        $options->set('defaultFont', 'Helvetica');
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+
+        // Generate PDF (landscape karena tabel lebar)
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        
+        // Download PDF
+        $filename = 'Progress_Report_' . date('Y-m-d') . '.pdf';
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
+    }
 }

@@ -35,10 +35,13 @@
 </style>
 
 <div class="container-fluid">
-    <!-- Tombol Kembali -->
-    <div class="mb-3">
+    <!-- Tombol Kembali dan Export PDF -->
+    <div class="mb-3 d-flex justify-content-between align-items-center">
         <a href="<?= base_url('client/issues') ?>" class="btn btn-outline-secondary btn-sm">
             <i class="fas fa-arrow-left me-1"></i> Kembali
+        </a>
+        <a href="<?= base_url('client/export-issue/' . $issue['id']) ?>" class="btn btn-danger btn-sm" target="_blank">
+            <i class="fas fa-file-pdf me-1"></i> Export PDF
         </a>
     </div>
 
@@ -72,7 +75,7 @@
                     <i class="fas fa-align-left me-2 text-primary"></i>
                     Deskripsi Kendala
                 </h5>
-                
+                <p><?= nl2br(esc((string)($issue['description'] ?? '-'))) ?></p>
             </div>
 
             <!-- Timeline / History -->
@@ -86,6 +89,9 @@
                         <div class="timeline-item">
                             <small class="text-muted"><?= date('d M Y H:i', strtotime($h['created_at'])) ?></small>
                             <p class="mb-0"><?= esc($h['description']) ?></p>
+                            <?php if(isset($h['changed_by'])): ?>
+                                <small class="text-muted">Oleh: <?= esc($h['changed_by']) ?></small>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -121,11 +127,11 @@
                         <td><?= $issue['assignee_name'] ?? 'Belum ditugaskan' ?></td>
                     </tr>
                     <?php if($issue['due_date']): ?>
-                        <tr>
-                            <td>Deadline</td>
-                            <td>:</td>
-                            <td><?= date('d/m/Y', strtotime($issue['due_date'])) ?></td>
-                        </tr>
+                    <tr>
+                        <td>Deadline</td>
+                        <td>:</td>
+                        <td><?= date('d/m/Y', strtotime($issue['due_date'])) ?></td>
+                    </tr>
                     <?php endif; ?>
                 </table>
             </div>

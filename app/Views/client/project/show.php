@@ -79,6 +79,11 @@
             <i class="fas fa-arrow-left me-1"></i> Kembali ke Daftar Proyek
         </a>
     </div>
+     <div>
+        <a href="<?= base_url('client/export-project/' . $project['id']) ?>" class="btn btn-danger btn-sm" target="_blank">
+            <i class="fas fa-file-pdf me-1"></i> Export PDF
+        </a>
+    </div>
 
     <!-- Header Proyek -->
     <div class="project-header">
@@ -125,6 +130,7 @@
                 <div class="info-label">Deskripsi Proyek</div>
                 <div class="info-value">
                     <?= nl2br(htmlspecialchars($project['description'])) ?>
+                </div>
             </div>
         </div>
     </div>

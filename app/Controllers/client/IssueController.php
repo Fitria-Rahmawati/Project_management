@@ -126,36 +126,91 @@ class IssueController extends BaseController
             ->with('success', 'Kendala berhasil dilaporkan');
     }
 
-    public function show($id)
-    {
-        $companyId = session()->get('company_id');
+   public function show($id)
+{
+    $companyId = session()->get('company_id');
 
-        $issue = $this->db->table('issues i')
-            ->select('i.*, p.project_name, reporter.username as reporter_name, assignee.username as assignee_name')
-            ->join('projects p', 'p.id = i.project_id')
-            ->join('users reporter', 'reporter.id = i.reporter_id', 'left')
-            ->join('users assignee', 'assignee.id = i.assignee_id', 'left')
-            ->where('i.id', $id)
-            ->where('p.company_id', $companyId)
-            ->get()
-            ->getRowArray();
+    $issue = $this->db->table('issues i')
+        ->select('i.*, p.project_name, reporter.username as reporter_name, assignee.username as assignee_name')
+        ->join('projects p', 'p.id = i.project_id')
+        ->join('users reporter', 'reporter.id = i.reporter_id', 'left')
+        ->join('users assignee', 'assignee.id = i.assignee_id', 'left')
+        ->where('i.id', $id)
+        ->where('p.company_id', $companyId)
+        ->get()
+        ->getRowArray();
 
-        if (!$issue) {
-            return redirect()->to('/client/issues')->with('error', 'Kendala tidak ditemukan');
-        }
-
-        $history = $this->db->table('issue_history')
-            ->where('issue_id', $id)
-            ->orderBy('created_at', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        $data = [
-            'title' => 'Detail Kendala',
-            'issue' => $issue,
-            'history' => $history
-        ];
-
-        return view('client/issues/show', $data);
+    if (!$issue) {
+        return redirect()->to('/client/issues')->with('error', 'Kendala tidak ditemukan');
     }
+
+    // Ambil history dari tabel issue_logs
+    $logs = $this->db->table('issue_logs')
+        ->select('issue_logs.*, u.username as changed_by_name')
+        ->join('users u', 'u.id = issue_logs.changed_by', 'left')
+        ->where('issue_id', $id)
+        ->orderBy('changed_at', 'ASC')
+        ->get()
+        ->getResultArray();
+
+    // Format ulang history untuk view
+    $history = [];
+    foreach ($logs as $log) {
+        $history[] = [
+            'description' => 'Status berubah dari "' . ($log['old_status'] ?? '-') . '" menjadi "' . ($log['new_status'] ?? '-') . '"',
+            'created_at' => $log['changed_at'],
+            'changed_by' => $log['changed_by_name'] ?? 'System'
+        ];
+    }
+
+    $data = [
+        'title' => 'Detail Kendala',
+        'issue' => $issue,
+        'history' => $history
+    ];
+
+    return view('client/issues/show', $data);
+}
+    public function exportPdf($id = null)
+{
+    if ($id === null) {
+        return redirect()->back()->with('error', 'ID Issue tidak ditemukan');
+    }
+
+    $companyId = session()->get('company_id');
+
+    $issue = $this->db->table('issues i')
+        ->select('i.*, p.project_name, assignee.username as assignee_name')
+        ->join('projects p', 'p.id = i.project_id')
+        ->join('users assignee', 'assignee.id = i.assignee_id', 'left')
+        ->where('i.id', $id)
+        ->where('p.company_id', $companyId)
+        ->get()
+        ->getRowArray();
+
+    if (!$issue) {
+        return redirect()->back()->with('error', 'Issue tidak ditemukan');
+    }
+
+    $data = [
+        'issue' => $issue,
+        'companyName' => session()->get('company_name') ?? 'Perusahaan Client'
+    ];
+
+    $html = view('client/export/issue_pdf', $data);
+
+    $options = new \Dompdf\Options();
+    $options->set('defaultFont', 'Helvetica');
+    $options->set('isHtml5ParserEnabled', true);
+    $options->set('isRemoteEnabled', true);
+
+    $dompdf = new \Dompdf\Dompdf($options);
+    $dompdf->loadHtml($html, 'UTF-8');
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+    
+    $filename = 'Issue_' . str_replace(' ', '_', $issue['title']) . '_' . date('Y-m-d') . '.pdf';
+    $dompdf->stream($filename, ['Attachment' => true]);
+    exit;
+}
 }

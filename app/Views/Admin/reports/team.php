@@ -156,10 +156,9 @@
                 <a href="<?= base_url('admin/reports/export/team') ?>" class="btn btn-sm btn-success">
                     <i class="fas fa-file-excel me-2"></i>Export Excel
                 </a>
-               <a href="<?= base_url('admin/reports/print-team') ?>" 
-       class="btn btn-sm btn-secondary" 
-       target="_blank">
-        <i class="fas fa-print me-2"></i>Cetak Laporan
+                   <a href="<?= base_url('admin/reports/export-team') ?>" class="btn btn-sm btn-danger" target="_blank">
+    <i class="fas fa-file-pdf"></i> PDF
+</a>
                 <a href="<?= base_url('admin/reports') ?>" class="btn btn-sm btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Kembali
                 </a>

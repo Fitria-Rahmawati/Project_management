@@ -43,6 +43,10 @@ $isReportsActive = ($segment1 == 'admin' && $segment2 == 'reports');
            class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'admin' && $segment2 == 'projects') ? 'active bg-primary text-white' : '' ?>">
             <i class="fas fa-project-diagram me-2"></i> Projects
         </a>
+        <a href="<?= base_url('admin/employees') ?>" 
+           class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'employees') ? 'active bg-primary text-white' : '' ?>">
+            <i class="fas fa-users me-2"></i> Karyawan
+        </a>
         <a href="<?= base_url('admin/teams') ?>" 
            class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'admin' && $segment2 == 'teams') ? 'active bg-primary text-white' : '' ?>">
             <i class="fas fa-users-cog me-2"></i> Teams
@@ -110,8 +114,8 @@ $isReportsActive = ($segment1 == 'admin' && $segment2 == 'reports');
            class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'client' && $segment2 == 'progress') ? 'active bg-primary text-white' : '' ?>">
             <i class="fas fa-chart-bar me-2"></i> Progress Reports
         </a>
-          <li class="nav-item">
-        <a class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'client' && $segment2 == 'issues') ? 'active bg-primary text-white' : '' ?>">
+          <a href="<?= base_url('client/issues') ?>" 
+         class="list-group-item list-group-item-action border-0 ps-4 <?= ($segment1 == 'client' && $segment2 == 'issues') ? 'active bg-primary text-white' : '' ?>">
             <i class="fas fa-exclamation-triangle"></i> Kendala
         </a>
     </li>

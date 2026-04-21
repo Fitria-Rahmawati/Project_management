@@ -44,7 +44,9 @@
             <i class="fas fa-arrow-left me-1"></i> Kembali ke Progress Report
         </a>
     </div>
-
+<a href="<?= base_url('client/export-progress') ?>" class="btn btn-danger" target="_blank">
+    <i class="fas fa-file-pdf me-2"></i> Export PDF
+</a>
     <!-- Header -->
     <div class="progress-header">
         <div class="d-flex justify-content-between align-items-start">

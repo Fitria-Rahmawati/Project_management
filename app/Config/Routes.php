@@ -186,6 +186,30 @@ $routes->group('admin', ['filter' => 'role:admin'], function ($routes) {
     $routes->get('issues/delete/(:num)', 'Issues::delete/$1', [
         'filter' => 'permission:manage_issues'
     ]);
+//employee
+// Employees Management (tanpa filter admin dulu untuk test)
+    $routes->get('employees', 'Employees::index', [
+        'filter' => 'permission:view_employees'
+    ]);
+    $routes->get('employees/create', 'Employees::create', [
+        'filter' => 'permission:manage_employees'
+    ]);
+    $routes->post('employees/store', 'Employees::store', [
+        'filter' => 'permission:manage_employees'
+    ]);
+    $routes->get('employees/edit/(:num)', 'Employees::edit/$1', [
+        'filter' => 'permission:manage_employees'
+    ]);
+    $routes->post('employees/update/(:num)', 'Employees::update/$1', [
+        'filter' => 'permission:manage_employees'
+    ]);
+    $routes->get('employees/delete/(:num)', 'Employees::delete/$1', [
+        'filter' => 'permission:manage_employees'
+    ]);
+    $routes->get('employees/show/(:num)', 'Employees::show/$1', [
+        'filter' => 'permission:manage_employees'
+    ]);
+    $routes->get('employees/reset-password/(:num)', 'Employees::resetPassword/$1');
 
     // Reports
     $routes->group('reports', ['namespace' => 'App\Controllers\Admin'], function($routes) {
@@ -199,6 +223,10 @@ $routes->group('admin', ['filter' => 'role:admin'], function ($routes) {
         $routes->get('print-projects', 'ReportController::printProjects');
         $routes->get('print-issues', 'ReportController::printIssues');
         $routes->get('print-clients', 'ReportController::printClients');
+        $routes->get('export-projects', 'ReportController::exportProjectsPDF');
+        $routes->get('export-issues', 'ReportController::exportIssuesPDF');
+        $routes->get('export-team', 'ReportController::exportTeamPDF');
+        $routes->get('export-client', 'ReportController::exportClientsPDF');
     });
 });
 
@@ -221,12 +249,16 @@ $routes->group('client', ['filter' => 'role:client'], function ($routes) {
         'filter' => 'permission:view_projects'
     ]);
    $routes->post('projects/comment/(:num)', 'Client\ProjectController::addComment/$1'); 
+     $routes->get('export-project/(:num)', 'Client\ProjectController::exportPdf/$1');
 
     // Progress
     $routes->get('progress', 'Client\ProgressController::index', [
         'filter' => 'permission:view_progress_reports'
     ]);
     $routes->get('progress/detail/(:num)', 'Client\ProgressController::detail/$1', [
+        'filter' => 'permission:view_progress_reports'
+    ]);
+    $routes->get('export-progress', 'Client\ProgressController::exportPdf', [
         'filter' => 'permission:view_progress_reports'
     ]);
 
@@ -246,6 +278,8 @@ $routes->group('client', ['filter' => 'role:client'], function ($routes) {
     $routes->get('issues/edit/(:num)', 'Client\IssueController::edit/$1', [
         'filter' => 'permission:report_issue' 
     ]);
+    $routes->get('export-issue/(:num)', 'Client\IssueController::exportPdf/$1');
+    
 });
 
 /*

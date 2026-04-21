@@ -585,7 +585,226 @@ class ReportController extends BaseController
         $writer->save('php://output');
         exit();
     }
+// ==================== EXPORT PDF METHODS ====================
 
+/**
+ * Export Laporan Proyek ke PDF
+ */
+public function exportProjectsPDF()
+{
+    $projects = $this->db->table('projects p')
+        ->select('
+            p.*,
+            c.company_name,
+            u.username as manager_name,
+            (SELECT COUNT(*) FROM issues WHERE project_id = p.id) as total_issues,
+            (SELECT COUNT(*) FROM issues WHERE project_id = p.id AND status = "Done") as completed_issues,
+            (SELECT COUNT(*) FROM issues WHERE project_id = p.id AND status = "Closed") as closed_issues,
+            (SELECT COUNT(*) FROM issues WHERE project_id = p.id AND due_date < CURDATE() AND status NOT IN ("Done", "Closed")) as overdue_issues
+        ')
+        ->join('companies c', 'c.id = p.company_id', 'left')
+        ->join('users u', 'u.id = p.project_manager_id', 'left')
+        ->get()
+        ->getResultArray();
+
+    foreach ($projects as &$project) {
+        $total = $project['total_issues'];
+        $completed = $project['completed_issues'] + $project['closed_issues'];
+        $project['progress'] = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+    }
+
+    $data = [
+        'title' => 'Laporan Progress Proyek',
+        'projects' => $projects,
+        'companyName' => 'PT Vitech Asia',
+        'printDate' => date('d/m/Y H:i:s'),
+        'printedBy' => session()->get('username')
+    ];
+
+    $html = view('admin/reports/pdf/project_pdf', $data);
+    $this->generatePDF($html, 'laporan_proyek_' . date('Y-m-d') . '.pdf', 'landscape');
+}
+
+/**
+ * Export Laporan Issue ke PDF
+ */
+public function exportIssuesPDF()
+{
+    $projectId = $this->request->getGet('project_id');
+    $dateFrom = $this->request->getGet('date_from');
+    $dateTo = $this->request->getGet('date_to');
+
+    $builder = $this->db->table('issues i');
+    $builder->select('
+        i.*,
+        p.project_name,
+        reporter.username as reporter_name,
+        assignee.username as assignee_name
+    ');
+    $builder->join('projects p', 'p.id = i.project_id');
+    $builder->join('users reporter', 'reporter.id = i.reporter_id', 'left');
+    $builder->join('users assignee', 'assignee.id = i.assignee_id', 'left');
+
+    if ($projectId) {
+        $builder->where('i.project_id', $projectId);
+    }
+    if ($dateFrom) {
+        $builder->where('i.created_at >=', $dateFrom . ' 00:00:00');
+    }
+    if ($dateTo) {
+        $builder->where('i.created_at <=', $dateTo . ' 23:59:59');
+    }
+
+    $builder->orderBy('i.created_at', 'DESC');
+    $issues = $builder->get()->getResultArray();
+
+    // Hitung statistik
+    $stats = [
+        'total' => count($issues),
+        'by_status' => [],
+        'by_priority' => [],
+        'by_type' => []
+    ];
+
+    foreach ($issues as $issue) {
+        $stats['by_status'][$issue['status']] = ($stats['by_status'][$issue['status']] ?? 0) + 1;
+        $stats['by_priority'][$issue['priority']] = ($stats['by_priority'][$issue['priority']] ?? 0) + 1;
+        $stats['by_type'][$issue['issue_type']] = ($stats['by_type'][$issue['issue_type']] ?? 0) + 1;
+    }
+
+    $data = [
+        'title' => 'Laporan Issue Summary',
+        'issues' => $issues,
+        'stats' => $stats,
+        'companyName' => 'PT Vitech Asia',
+        'printDate' => date('d/m/Y H:i:s'),
+        'printedBy' => session()->get('username'),
+        'filters' => [
+            'project_id' => $projectId,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo
+        ]
+    ];
+
+    $html = view('admin/reports/pdf/issues_pdf', $data);
+    $this->generatePDF($html, 'laporan_issue_' . date('Y-m-d') . '.pdf', 'landscape');
+}
+
+/**
+ * Export Laporan Kinerja Tim ke PDF
+ */
+public function exportTeamPDF()
+{
+    $staff = $this->db->table('users u')
+        ->select('
+            u.id,
+            u.username,
+            u.email,
+            r.name as role_name,
+            e.first_name,
+            e.last_name,
+            pos.position_name,
+            d.department_name,
+            (SELECT COUNT(*) FROM issues WHERE assignee_id = u.id) as assigned_issues,
+            (SELECT COUNT(*) FROM issues WHERE assignee_id = u.id AND status = "Done") as completed_issues,
+            (SELECT COUNT(*) FROM issues WHERE assignee_id = u.id AND status = "Closed") as closed_issues,
+            (SELECT COUNT(*) FROM issues WHERE assignee_id = u.id AND due_date < CURDATE() AND status NOT IN ("Done", "Closed")) as overdue_issues,
+            (SELECT SUM(actual_hours) FROM issues WHERE assignee_id = u.id) as total_hours
+        ')
+        ->join('roles r', 'r.id = u.role_id')
+        ->join('employees e', 'e.user_id = u.id', 'left')
+        ->join('positions pos', 'pos.id = e.position_id', 'left')
+        ->join('departments d', 'd.id = e.department_id', 'left')
+        ->where('u.role_id', 4) 
+        ->orWhere('u.role_id', 2) 
+        ->get()
+        ->getResultArray();
+
+    foreach ($staff as &$member) {
+        $assigned = $member['assigned_issues'];
+        $completed = $member['completed_issues'] + $member['closed_issues'];
+        $member['completion_rate'] = $assigned > 0 ? round(($completed / $assigned) * 100, 2) : 0;
+    }
+
+    $data = [
+        'title' => 'Laporan Kinerja Tim',
+        'staff' => $staff,
+        'companyName' => 'PT Vitech Asia',
+        'printDate' => date('d/m/Y H:i:s'),
+        'printedBy' => session()->get('username'),
+        'totalStaff' => count($staff),
+        'totalTasks' => array_sum(array_column($staff, 'assigned_issues')),
+        'totalCompleted' => array_sum(array_column($staff, 'completed_issues')) + array_sum(array_column($staff, 'closed_issues')),
+        'totalOverdue' => array_sum(array_column($staff, 'overdue_issues')),
+        'avgCompletion' => count($staff) > 0 ? round(array_sum(array_column($staff, 'completion_rate')) / count($staff), 2) : 0
+    ];
+
+    $html = view('admin/reports/pdf/team_pdf', $data);
+    $this->generatePDF($html, 'laporan_tim_' . date('Y-m-d') . '.pdf', 'landscape');
+}
+
+/**
+ * Export Laporan Client ke PDF
+ */
+public function exportClientsPDF()
+{
+    $clients = $this->db->table('companies c')
+        ->select('
+            c.*,
+            (SELECT COUNT(*) FROM projects WHERE company_id = c.id) as total_projects,
+            (SELECT COUNT(*) FROM issues i 
+             JOIN projects p ON p.id = i.project_id 
+             WHERE p.company_id = c.id) as total_issues,
+            (SELECT COUNT(*) FROM issues i 
+             JOIN projects p ON p.id = i.project_id 
+             WHERE p.company_id = c.id AND i.status = "Done") as completed_issues,
+            (SELECT COUNT(*) FROM issues i 
+             JOIN projects p ON p.id = i.project_id 
+             WHERE p.company_id = c.id AND i.status = "Closed") as closed_issues
+        ')
+        ->where('c.company_type', 'client')
+        ->get()
+        ->getResultArray();
+
+    foreach ($clients as &$client) {
+        $total = $client['total_issues'];
+        $completed = $client['completed_issues'] + $client['closed_issues'];
+        $client['completion_rate'] = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+    }
+
+    $data = [
+        'title' => 'Laporan Client',
+        'clients' => $clients,
+        'companyName' => 'PT Vitech Asia',
+        'printDate' => date('d/m/Y H:i:s'),
+        'printedBy' => session()->get('username'),
+        'totalClients' => count($clients),
+        'totalProjects' => array_sum(array_column($clients, 'total_projects')),
+        'totalIssues' => array_sum(array_column($clients, 'total_issues')),
+        'totalCompleted' => array_sum(array_column($clients, 'completed_issues')) + array_sum(array_column($clients, 'closed_issues'))
+    ];
+
+    $html = view('admin/reports/pdf/client_pdf', $data);
+    $this->generatePDF($html, 'laporan_client_' . date('Y-m-d') . '.pdf', 'landscape');
+}
+
+/**
+ * Generate PDF Helper
+ */
+private function generatePDF($html, $filename, $orientation = 'portrait')
+{
+    $options = new \Dompdf\Options();
+    $options->set('defaultFont', 'Helvetica');
+    $options->set('isHtml5ParserEnabled', true);
+    $options->set('isRemoteEnabled', true);
+    
+    $dompdf = new \Dompdf\Dompdf($options);
+    $dompdf->loadHtml($html, 'UTF-8');
+    $dompdf->setPaper('A4', $orientation);
+    $dompdf->render();
+    $dompdf->stream($filename, ['Attachment' => true]);
+    exit;
+}
     public function printProjects()
     {
         $projects = $this->db->table('projects p')
