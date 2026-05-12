@@ -16,9 +16,12 @@ $routes->get('/', 'AuthController::login');
 $routes->get('/login', 'AuthController::login');
 $routes->post('/login/process', 'AuthController::process');
 $routes->get('/logout', 'AuthController::logout');
-// Register
-$routes->get('/register', 'RegisterController::index');
-$routes->post('/register/process', 'RegisterController::process');
+
+// Forgot Password Routes
+$routes->get('/forgot-password', 'AuthController::forgotPassword');
+$routes->post('/forgot-password/request', 'AuthController::requestReset');
+$routes->get('/reset-password/(:any)', 'AuthController::resetForm/$1');
+$routes->post('/reset-password/update', 'AuthController::updatePassword');
 
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'auth']);
 // Tambahkan route untuk profile (berlaku untuk semua role)
@@ -319,6 +322,9 @@ $routes->group('staff', ['filter' => 'role:staff'], function ($routes) {
     ]);
     $routes->post('issues/store', 'Staff\IssueController::store', [
         'filter' => 'permission:report_issue'
+    ]);
+    $routes->get('issues/(:num)', 'Staff\IssueController::show/$1', [
+        'filter' => 'permission:view_issues'
     ]);
 
     // Projects

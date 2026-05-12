@@ -32,6 +32,7 @@ class Issues extends BaseController
         $status = $this->request->getGet('status');
         $priority = $this->request->getGet('priority');
         $assignee = $this->request->getGet('assignee');
+        
         $builder = $this->db->table('issues i');
         $builder->select('
             i.*, 
@@ -43,6 +44,7 @@ class Issues extends BaseController
         $builder->join('projects p', 'p.id = i.project_id');
         $builder->join('users reporter', 'reporter.id = i.reporter_id', 'left');
         $builder->join('users assignee', 'assignee.id = i.assignee_id', 'left');
+        
         if ($projectId) {
             $builder->where('i.project_id', $projectId);
         }
@@ -90,6 +92,7 @@ class Issues extends BaseController
             return redirect()->to('admin/issues')
                 ->with('error', 'Issue tidak ditemukan');
         }
+        
         $data = [
             'title' => 'Detail Issue #' . $id,
             'issue' => $issue,
@@ -129,6 +132,7 @@ class Issues extends BaseController
             return redirect()->back()->withInput()
                 ->with('error', 'Validasi gagal, periksa kembali input Anda');
         }
+        
         $data = [
             'project_id' => $this->request->getPost('project_id'),
             'issue_type' => $this->request->getPost('issue_type'),
@@ -144,63 +148,54 @@ class Issues extends BaseController
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
+        
         $this->issue->insert($data);
         $issueId = $this->issue->insertID();
+        
+        // ✅ PERBAIKI: Log create issue
         $this->db->table('issue_logs')->insert([
             'issue_id' => $issueId,
-            'change_by' => session()->get('user_id'),
             'old_status' => '',
             'new_status' => 'To Do',
             'changed_by' => session()->get('user_id'),
-            'comment' => 'Issue created',
             'changed_at' => date('Y-m-d H:i:s')
         ]);
-        if ($data['assignee_id']) {
-            $assigneeName = $this->user->find($data['assignee_id'])['username'];
-            $this->db->table('issue_logs')->insert([
-                'issue_id' => $issueId,
-                'change_by' => session()->get('user_id'),
-                'field_name' => 'assignee',
-                'old_value' => 'Unassigned',
-                'new_value' => $assigneeName,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-        }
 
         return redirect()->to('/admin/issues/' . $issueId)
             ->with('success', 'Issue berhasil dibuat');
     }
 
-public function edit($id)
-{
-    $issue = $this->issue->find($id);
+    public function edit($id)
+    {
+        $issue = $this->issue->find($id);
 
-    if (!$issue) {
-        return redirect()->to('admin/issues')
-            ->with('error', 'Issue tidak ditemukan');
-    }
+        if (!$issue) {
+            return redirect()->to('admin/issues')
+                ->with('error', 'Issue tidak ditemukan');
+        }
 
-    $users = $this->db->table('users')
-        ->select('users.id, users.username, roles.name as role_name')
-        ->join('roles', 'roles.id = users.role_id')
-        ->where('users.is_active', 1)
-        ->orderBy('users.username', 'ASC')
-        ->get()
-        ->getResultArray();
+        $users = $this->db->table('users')
+            ->select('users.id, users.username, roles.name as role_name')
+            ->join('roles', 'roles.id = users.role_id')
+            ->where('users.is_active', 1)
+            ->orderBy('users.username', 'ASC')
+            ->get()
+            ->getResultArray();
 
-    $data = [
-        'title' => 'Edit Issue #' . $id,
-        'issue' => $issue,
-        'projects' => $this->project->findAll(),
-        'users' => $users,
-        'parent_issues' => $this->issue->where('id !=', $id)
+        $data = [
+            'title' => 'Edit Issue #' . $id,
+            'issue' => $issue,
+            'projects' => $this->project->findAll(),
+            'users' => $users,
+            'parent_issues' => $this->issue->where('id !=', $id)
                                       ->where('status !=', 'Closed')
                                       ->where('project_id', $issue['project_id'])
                                       ->findAll()
-    ];
+        ];
 
-    return view('admin/issues/edit', $data);
-}
+        return view('admin/issues/edit', $data);
+    }
+    
     public function update($id)
     {
         $issue = $this->issue->find($id);
@@ -209,6 +204,7 @@ public function edit($id)
             return redirect()->to('/admin/issues')
                 ->with('error', 'Issue tidak ditemukan');
         }
+        
         $rules = [
             'title' => 'required|min_length[3]|max_length[255]',
             'priority' => 'required|in_list[Lowest,Low,Medium,High,Highest]',
@@ -219,6 +215,7 @@ public function edit($id)
             return redirect()->back()->withInput()
                 ->with('error', 'Validasi gagal');
         }
+        
         $oldData = $issue;
         $newData = [
             'title' => $this->request->getPost('title'),
@@ -230,6 +227,7 @@ public function edit($id)
             'estimated_hours' => $this->request->getPost('estimated_hours') ?: null,
             'updated_at' => date('Y-m-d H:i:s')
         ];
+        
         $this->issue->update($id, $newData);
         $this->logChanges($id, $oldData, $newData);
 
@@ -245,12 +243,14 @@ public function edit($id)
             return redirect()->to('/admin/issues')
                 ->with('error', 'Issue tidak ditemukan');
         }
+        
         $hasChild = $this->issue->where('parent_issue_id', $id)->countAllResults();
 
         if ($hasChild > 0) {
             return redirect()->to('/admin/issues')
                 ->with('error', 'Tidak bisa menghapus issue yang memiliki subtask');
         }
+        
         $this->db->table('issue_logs')->where('issue_id', $id)->delete();
         $this->issue->delete($id);
 
@@ -283,13 +283,14 @@ public function edit($id)
             'status' => $status,
             'updated_at' => date('Y-m-d H:i:s')
         ]);
+        
+        // ✅ PERBAIKI: Log perubahan status
         $this->db->table('issue_logs')->insert([
             'issue_id' => $id,
-            'change_by' => session()->get('user_id'),
-            'field_name' => 'status',
-            'old_value' => $oldStatus,
-            'new_value' => $status,
-            'created_at' => date('Y-m-d H:i:s')
+            'old_status' => $oldStatus,
+            'new_status' => $status,
+            'changed_by' => session()->get('user_id'),
+            'changed_at' => date('Y-m-d H:i:s')
         ]);
 
         return redirect()->back()->with('success', 'Status berhasil diupdate menjadi ' . $status);
@@ -313,13 +314,14 @@ public function edit($id)
             'assignee_id' => $assigneeId ?: null,
             'updated_at' => date('Y-m-d H:i:s')
         ]);
+        
+        // ✅ PERBAIKI: Log perubahan assignee (gunakan old_status untuk menyimpan info)
         $this->db->table('issue_logs')->insert([
             'issue_id' => $id,
-            'change_by' => session()->get('user_id'),
-            'field_name' => 'assignee',
-            'old_value' => $oldName,
-            'new_value' => $newName,
-            'created_at' => date('Y-m-d H:i:s')
+            'old_status' => 'Assignee: ' . $oldName,
+            'new_status' => 'Assignee: ' . $newName,
+            'changed_by' => session()->get('user_id'),
+            'changed_at' => date('Y-m-d H:i:s')
         ]);
 
         return redirect()->back()->with('success', 'Assignee berhasil diupdate menjadi ' . $newName);
@@ -338,14 +340,14 @@ public function edit($id)
         if (!$issue) {
             return redirect()->back()->with('error', 'Issue tidak ditemukan');
         }
+        
+        // ✅ PERBAIKI: Simpan komentar
         $this->db->table('issue_logs')->insert([
             'issue_id' => $id,
-            'change_by' => session()->get('user_id'),
-            'field_name' => null,
-            'old_value' => null,
-            'new_value' => null,
-            'comment' => $comment,
-            'created_at' => date('Y-m-d H:i:s')
+            'old_status' => $comment,
+            'new_status' => null,
+            'changed_by' => session()->get('user_id'),
+            'changed_at' => date('Y-m-d H:i:s')
         ]);
 
         return redirect()->back()->with('success', 'Komentar berhasil ditambahkan');
@@ -365,6 +367,7 @@ public function edit($id)
         if (!$issue) {
             return redirect()->back()->with('error', 'Issue tidak ditemukan');
         }
+        
         $currentHours = $issue['actual_hours'] ?? 0;
         $newHours = $currentHours + $hours;
 
@@ -372,14 +375,14 @@ public function edit($id)
             'actual_hours' => $newHours,
             'updated_at' => date('Y-m-d H:i:s')
         ]);
+        
+        // ✅ PERBAIKI: Log time
         $this->db->table('issue_logs')->insert([
             'issue_id' => $id,
-            'change_by' => session()->get('user_id'),
-            'field_name' => 'time_log',
-            'old_value' => (string)$currentHours,
-            'new_value' => (string)$newHours,
-            'comment' => $description ?? 'Logged ' . $hours . ' hours',
-            'created_at' => date('Y-m-d H:i:s')
+            'old_status' => $description ?? 'Logged ' . $hours . ' hours',
+            'new_status' => 'Total hours: ' . $newHours,
+            'changed_by' => session()->get('user_id'),
+            'changed_at' => date('Y-m-d H:i:s')
         ]);
 
         return redirect()->back()->with('success', $hours . ' jam berhasil dicatat');
@@ -405,7 +408,7 @@ public function edit($id)
                 $issue['project_name'],
                 $issue['status'],
                 $issue['priority'],
-                $issue['reporter_name'],
+                $issue['reporter_name'] ?? '-',
                 $issue['assignee_name'] ?? 'Unassigned',
                 date('d/m/Y', strtotime($issue['created_at'])),
                 $issue['due_date'] ? date('d/m/Y', strtotime($issue['due_date'])) : '-'
@@ -440,26 +443,20 @@ public function edit($id)
         return view('admin/issues/dashboard', $data);
     }
 
+    // ✅ METHOD logChanges YANG DIPERBAIKI
     private function logChanges($id, $old, $new)
     {
-        $fieldsToCheck = ['title', 'description', 'priority', 'status', 'assignee_id', 'due_date', 'estimated_hours'];
-
+        // Field yang akan dilog (hanya status)
+        $fieldsToCheck = ['status'];
+        
         foreach ($fieldsToCheck as $field) {
             if (isset($old[$field]) && isset($new[$field]) && $old[$field] != $new[$field]) {
-                $oldValue = $field == 'assignee_id' 
-                    ? ($old[$field] ? $this->user->find($old[$field])['username'] : 'Unassigned')
-                    : $old[$field];
-                $newValue = $field == 'assignee_id'
-                    ? ($new[$field] ? $this->user->find($new[$field])['username'] : 'Unassigned')
-                    : $new[$field];
-
                 $this->db->table('issue_logs')->insert([
                     'issue_id' => $id,
+                    'old_status' => $old[$field],
+                    'new_status' => $new[$field],
                     'changed_by' => session()->get('user_id'),
-                    'field_name' => $field,
-                    'old_value' => (string)$oldValue,
-                    'new_value' => (string)$newValue,
-                    'created_at' => date('Y-m-d H:i:s')
+                    'changed_at' => date('Y-m-d H:i:s')
                 ]);
             }
         }

@@ -73,6 +73,33 @@
         padding: 20px;
         margin-bottom: 20px;
     }
+    
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #667eea;
+        font-weight: 500;
+    }
 </style>
 
 <div class="container-fluid px-0">
@@ -83,18 +110,19 @@
                 <?= $title ?>
             </h5>
             <div>
-                <a href="<?= base_url('admin/reports/export/projects') ?>" class="btn btn-success btn-sm me-2">
+                <a href="<?= base_url('admin/reports/export/projects') ?>" class="btn btn-success btn-sm me-2" id="btnExportCSV">
                     <i class="fas fa-file-export me-2"></i>Export CSV
                 </a>
-                <a href="<?= base_url('admin/reports/export-projects') ?>" class="btn btn-sm btn-danger" target="_blank">
-    <i class="fas fa-file-pdf"></i> PDF
-</a>
-                <a href="<?= base_url('admin/reports') ?>" class="btn btn-secondary btn-sm">
+                <a href="<?= base_url('admin/reports/export-projects') ?>" class="btn btn-danger btn-sm me-2" target="_blank" id="btnExportPDF">
+                    <i class="fas fa-file-pdf me-2"></i>PDF
+                </a>
+                <a href="<?= base_url('admin/projects') ?>" class="btn btn-secondary btn-sm" id="btnBack">
                     <i class="fas fa-arrow-left me-2"></i>Kembali
                 </a>
             </div>
         </div>
     </div>
+    
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="summary-card">
@@ -137,7 +165,7 @@
                 <h3 class="mt-2 mb-0">
                     <?php 
                     $overdue = array_filter($projects, function($p) {
-                        return $p['overdue_issues'] > 0;
+                        return ($p['overdue_issues'] ?? 0) > 0;
                     });
                     echo count($overdue);
                     ?>
@@ -146,6 +174,7 @@
             </div>
         </div>
     </div>
+    
     <div class="row">
         <?php if(empty($projects)): ?>
             <div class="col-12">
@@ -160,46 +189,46 @@
                     <div class="card progress-card">
                         <div class="card-body">
                             <div class="project-header">
-                                <span class="project-name"><?= $project['project_name'] ?></span>
-                                <span class="project-type <?= $project['project_type'] == 'internal' ? 'type-internal' : 'type-client' ?>">
-                                    <?= ucfirst($project['project_type']) ?>
+                                <span class="project-name"><?= esc($project['project_name']) ?></span>
+                                <span class="project-type <?= ($project['project_type'] ?? 'internal') == 'internal' ? 'type-internal' : 'type-client' ?>">
+                                    <?= ucfirst($project['project_type'] ?? 'internal') ?>
                                 </span>
                             </div>
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between mb-1">
                                     <small class="text-muted">Progress</small>
-                                    <small class="text-primary fw-bold"><?= $project['progress'] ?>%</small>
+                                    <small class="text-primary fw-bold"><?= $project['progress'] ?? 0 ?>%</small>
                                 </div>
                                 <div class="progress">
-                                    <div class="progress-bar" style="width: <?= $project['progress'] ?>%"></div>
+                                    <div class="progress-bar" style="width: <?= $project['progress'] ?? 0 ?>%"></div>
                                 </div>
                             </div>
                             <div class="row text-center mb-3">
                                 <div class="col-4">
                                     <div class="stat-label">Total</div>
-                                    <div class="stat-value"><?= $project['total_issues'] ?></div>
+                                    <div class="stat-value"><?= $project['total_issues'] ?? 0 ?></div>
                                 </div>
                                 <div class="col-4">
                                     <div class="stat-label">Completed</div>
-                                    <div class="stat-value text-success"><?= $project['completed_issues'] + $project['closed_issues'] ?></div>
+                                    <div class="stat-value text-success"><?= ($project['completed_issues'] ?? 0) + ($project['closed_issues'] ?? 0) ?></div>
                                 </div>
                                 <div class="col-4">
                                     <div class="stat-label">Overdue</div>
-                                    <div class="stat-value text-danger"><?= $project['overdue_issues'] ?></div>
+                                    <div class="stat-value text-danger"><?= $project['overdue_issues'] ?? 0 ?></div>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <small class="text-muted d-block">
-                                    <i class="fas fa-building me-2"></i><?= $project['company_name'] ?? 'Internal' ?>
+                                    <i class="fas fa-building me-2"></i><?= esc($project['company_name'] ?? 'Internal') ?>
                                 </small>
                                 <small class="text-muted d-block">
-                                    <i class="fas fa-user-tie me-2"></i>PM: <?= $project['manager_name'] ?? '-' ?>
+                                    <i class="fas fa-user-tie me-2"></i>PM: <?= esc($project['manager_name'] ?? '-') ?>
                                 </small>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="badge-status 
                                     <?php 
-                                    switch($project['status']) {
+                                    switch($project['status'] ?? '') {
                                         case 'planning':
                                         case 'proposed':
                                             echo 'bg-secondary';
@@ -215,9 +244,9 @@
                                             echo 'bg-info';
                                     }
                                     ?>">
-                                    <?= ucfirst(str_replace('_', ' ', $project['status'])) ?>
+                                    <?= ucfirst(str_replace('_', ' ', $project['status'] ?? 'Unknown')) ?>
                                 </span>
-                                <a href="<?= base_url('admin/projects/' . $project['id']) ?>" class="btn btn-sm btn-outline-primary">
+                                <a href="<?= base_url('admin/projects/' . $project['id']) ?>" class="btn btn-sm btn-outline-primary" data-detail-link data-id="<?= $project['id'] ?>" data-name="<?= esc($project['project_name']) ?>">
                                     <i class="fas fa-eye"></i> Detail
                                 </a>
                             </div>
@@ -229,7 +258,69 @@
     </div>
 </div>
 
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Memproses...</p>
+    </div>
+</div>
+
 <script>
+// Loading Overlay
+function showLoading(message = 'Memproses...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Loading untuk tombol export CSV
+document.getElementById('btnExportCSV')?.addEventListener('click', function(e) {
+    showLoading('Menyiapkan file Excel...');
+    setTimeout(() => {
+        hideLoading();
+    }, 2000);
+});
+
+// Loading untuk tombol export PDF
+document.getElementById('btnExportPDF')?.addEventListener('click', function(e) {
+    showLoading('Menyiapkan file PDF...');
+    setTimeout(() => {
+        hideLoading();
+    }, 2000);
+});
+
+// Loading untuk tombol kembali
+document.getElementById('btnBack')?.addEventListener('click', function(e) {
+    showLoading('Kembali ke halaman reports...');
+});
+
+// Loading untuk tombol detail project
+document.querySelectorAll('[data-detail-link]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        const projectName = this.getAttribute('data-name') || 'Project';
+        showLoading(`Memuat detail ${projectName}...`);
+    });
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto-hide flash messages
 setTimeout(function() {
     let alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {

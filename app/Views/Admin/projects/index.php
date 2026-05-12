@@ -51,6 +51,40 @@
         background: #e8f5e9;
         color: #2e7d32;
     }
+    
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #667eea;
+        font-weight: 500;
+    }
+    
+    /* Button loading */
+    .btn-loading {
+        opacity: 0.7;
+        cursor: wait;
+        pointer-events: none;
+    }
 </style>
 
 <div class="container-fluid px-0">
@@ -61,12 +95,13 @@
                 <?= $title ?>
             </h5>
             <div>
-                <a href="/admin/projects/create" class="btn btn-primary btn-sm">
+                <a href="/admin/projects/create" class="btn btn-primary btn-sm" id="btnCreate">
                     <i class="fas fa-plus me-2"></i>Tambah Project
                 </a>
             </div>
         </div>
     </div>
+    
     <?php if(session()->getFlashdata('success')): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle me-2"></i>
@@ -92,6 +127,7 @@
             </ul>
         </div>
     <?php endif; ?>
+    
     <div class="row mb-4">
         <?php
         $totalProjects = count($projects);
@@ -174,13 +210,14 @@
             </div>
         </div>
     </div>
+    
     <div class="filter-card">
-        <form method="get" action="<?= base_url('admin/projects') ?>">
+        <form method="get" action="<?= base_url('admin/projects') ?>" id="filterForm">
             <div class="row">
                 <div class="col-md-3">
                     <div class="mb-2">
                         <label class="form-label">Filter Status</label>
-                        <select name="status" class="form-select">
+                        <select name="status" class="form-select" id="filterStatus">
                             <option value="">Semua Status</option>
                             <option value="planning" <?= ($filters['status'] ?? '') == 'planning' ? 'selected' : '' ?>>Planning</option>
                             <option value="in_progress" <?= ($filters['status'] ?? '') == 'in_progress' ? 'selected' : '' ?>>In Progress</option>
@@ -192,7 +229,7 @@
                 <div class="col-md-3">
                     <div class="mb-2">
                         <label class="form-label">Filter Type</label>
-                        <select name="type" class="form-select">
+                        <select name="type" class="form-select" id="filterType">
                             <option value="">Semua Type</option>
                             <option value="internal" <?= ($filters['type'] ?? '') == 'internal' ? 'selected' : '' ?>>Internal</option>
                             <option value="client" <?= ($filters['type'] ?? '') == 'client' ? 'selected' : '' ?>>Client</option>
@@ -202,11 +239,11 @@
                 <div class="col-md-3">
                     <div class="mb-2">
                         <label class="form-label">Filter Company</label>
-                        <select name="company" class="form-select">
+                        <select name="company" class="form-select" id="filterCompany">
                             <option value="">Semua Company</option>
                             <?php foreach($companies as $company): ?>
                                 <option value="<?= $company['id'] ?>" <?= ($filters['company'] ?? '') == $company['id'] ? 'selected' : '' ?>>
-                                    <?= $company['company_name'] ?>
+                                    <?= esc($company['company_name']) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -215,7 +252,7 @@
                 <div class="col-md-3">
                     <div class="mb-2">
                         <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary form-control">
+                        <button type="submit" class="btn btn-primary form-control" id="btnFilter">
                             <i class="fas fa-filter me-2"></i>Filter
                         </button>
                     </div>
@@ -224,7 +261,7 @@
             <?php if(!empty($filters['status']) || !empty($filters['type']) || !empty($filters['company'])): ?>
                 <div class="row mt-2">
                     <div class="col-12">
-                        <a href="<?= base_url('admin/projects') ?>" class="btn btn-sm btn-secondary">
+                        <a href="<?= base_url('admin/projects') ?>" class="btn btn-sm btn-secondary" id="btnReset">
                             <i class="fas fa-times me-2"></i>Reset Filter
                         </a>
                     </div>
@@ -232,6 +269,7 @@
             <?php endif; ?>
         </form>
     </div>
+    
     <div class="card shadow">
         <div class="card-body">
             <div class="table-responsive">
@@ -252,17 +290,21 @@
                                 <td colspan="6" class="text-center py-5">
                                     <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
                                     <p class="text-muted">Belum ada data project</p>
-                                    <a href="/admin/projects/create" class="btn btn-primary btn-sm">
+                                    <a href="/admin/projects/create" class="btn btn-primary btn-sm" id="btnCreateFirst">
                                         <i class="fas fa-plus me-2"></i>Tambah Project Pertama
                                     </a>
-                                </td>
+                                 </div>
+                                 </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach($projects as $index => $project): ?>
+                                <?php
+                                $pmName = $project['manager_first_name'] ?? $project['manager_username'] ?? '-';
+                                ?>
                                 <tr>
                                     <td class="text-center"><?= $index + 1 ?></td>
                                     <td>
-                                        <strong><?= $project['project_name'] ?></strong>
+                                        <strong><?= esc($project['project_name']) ?></strong>
                                         <br>
                                         <span class="project-type <?= ($project['project_type'] ?? 'internal') == 'internal' ? 'type-internal' : 'type-client' ?>">
                                             <i class="fas <?= ($project['project_type'] ?? '') == 'internal' ? 'fa-building' : 'fa-user-tie' ?> me-1"></i>
@@ -270,41 +312,41 @@
                                         </span>
                                         <?php if(!empty($project['description'])): ?>
                                             <br>
-                                            <small class="text-muted"><?= character_limiter($project['description'], 50) ?></small>
+                                            <small class="text-muted"><?= esc(character_limiter($project['description'], 50)) ?></small>
                                         <?php endif; ?>
-                                    </td>
+                                     </div>
+                                     </td>
                                     <td>
-                                        <strong><?= $project['company_name'] ?? 'Internal' ?></strong>
+                                        <strong><?= esc($project['company_name'] ?? 'Internal') ?></strong>
                                         <br>
                                         <small class="text-muted">
                                             <?php if(($project['company_type'] ?? '') == 'client'): ?>
-                                                <i class="fas fa-user-tie me-1"></i>Contact: <?= $project['contact_person'] ?? '-' ?>
+                                                <i class="fas fa-user-tie me-1"></i>Contact: <?= esc($project['contact_person'] ?? '-') ?>
                                             <?php else: ?>
                                                 <i class="fas fa-building me-1"></i>Internal
                                             <?php endif; ?>
                                         </small>
-                                    </td>
+                                     </div>
+                                     </td>
                                     <td>
-                                        <?php 
-                                        $pmName = $project['manager_first_name'] ?? $project['manager_username'] ?? '-';
-                                        if($pmName != '-'): 
-                                        ?>
+                                        <?php if($pmName != '-'): ?>
                                             <div class="d-flex align-items-center">
                                                 <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
                                                      style="width: 30px; height: 30px; font-size: 12px;">
                                                     <?= strtoupper(substr($pmName, 0, 1)) ?>
                                                 </div>
                                                 <div>
-                                                    <?= $pmName ?>
+                                                    <?= esc($pmName) ?>
                                                     <?php if(!empty($project['manager_last_name'])): ?>
-                                                        <?= ' ' . $project['manager_last_name'] ?>
+                                                        <?= ' ' . esc($project['manager_last_name']) ?>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
                                         <?php else: ?>
                                             <span class="text-muted">-</span>
                                         <?php endif; ?>
-                                    </td>
+                                     </div>
+                                     </td>
                                     <td>
                                         <?php 
                                         $statusClass = '';
@@ -348,23 +390,25 @@
                                                 - <?= date('d/m/Y', strtotime($project['end_date'])) ?>
                                             <?php endif; ?>
                                         </small>
-                                    </td>
+                                     </div>
+                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="/admin/projects/<?= $project['id'] ?>" class="btn btn-info btn-sm" title="Detail">
+                                            <a href="/admin/projects/<?= $project['id'] ?>" class="btn btn-info btn-sm" title="Detail" data-detail-link>
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="/admin/projects/edit/<?= $project['id'] ?>" class="btn btn-warning btn-sm" title="Edit">
+                                            <a href="/admin/projects/edit/<?= $project['id'] ?>" class="btn btn-warning btn-sm" title="Edit" data-edit-link>
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="/admin/projects/delete/<?= $project['id'] ?>" 
+                                            <a href="javascript:void(0)" 
                                                class="btn btn-danger btn-sm" 
-                                               onclick="return confirm('Yakin ingin menghapus project ini?')"
+                                               onclick="confirmDelete(<?= $project['id'] ?>, '<?= addslashes($project['project_name']) ?>')"
                                                title="Hapus">
                                                 <i class="fas fa-trash"></i>
                                             </a>
                                         </div>
-                                    </td>
+                                     </div>
+                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -375,8 +419,78 @@
     </div>
 </div>
 
-<!-- Auto-hide flash messages -->
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Memproses...</p>
+    </div>
+</div>
+
 <script>
+// Loading Overlay
+function showLoading(message = 'Memproses...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Konfirmasi Delete dengan pesan detail
+function confirmDelete(id, projectName) {
+    if (confirm(`⚠️ PERINGATAN!\n\nYakin ingin menghapus project "${projectName}"?\n\nData project, issue, task, dan komentar akan terhapus semua!\n\nTindakan ini TIDAK DAPAT DIBATALKAN.\n\nKlik OK untuk menghapus.`)) {
+        showLoading('Menghapus project...');
+        setTimeout(() => {
+            window.location.href = '/admin/projects/delete/' + id;
+        }, 200);
+    }
+}
+
+// Loading untuk tombol create
+document.getElementById('btnCreate')?.addEventListener('click', function(e) {
+    showLoading('Membuka form tambah project...');
+});
+document.getElementById('btnCreateFirst')?.addEventListener('click', function(e) {
+    showLoading('Membuka form tambah project...');
+});
+
+// Loading untuk tombol filter
+document.getElementById('btnFilter')?.addEventListener('click', function(e) {
+    showLoading('Menerapkan filter...');
+});
+document.getElementById('btnReset')?.addEventListener('click', function(e) {
+    showLoading('Merreset filter...');
+});
+
+// Loading untuk tombol detail dan edit
+document.querySelectorAll('[data-detail-link]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        showLoading('Memuat detail project...');
+    });
+});
+document.querySelectorAll('[data-edit-link]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        showLoading('Membuka form edit project...');
+    });
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto-hide flash messages
 setTimeout(function() {
     let alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {

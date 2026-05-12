@@ -76,17 +76,43 @@
     .table-team {
         font-size: 14px;
     }
+    
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #667eea;
+        font-weight: 500;
+    }
 </style>
 
 <div class="container-fluid px-0">
-
     <div class="card shadow mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
                 <i class="fas fa-users-cog me-2 text-primary"></i>
                 <?= $title ?>
             </h5>
-            <a href="/admin/teams/create" class="btn btn-primary btn-sm">
+            <a href="/admin/teams/create" class="btn btn-primary btn-sm" id="btnCreate">
                 <i class="fas fa-plus me-2"></i> Tambah Team
             </a>
         </div>
@@ -157,7 +183,7 @@
                 <div class="text-center py-5">
                     <i class="fas fa-users-slash fa-4x text-muted mb-3"></i>
                     <p class="text-muted">Belum ada data team</p>
-                    <a href="/admin/teams/create" class="btn btn-primary btn-sm">
+                    <a href="/admin/teams/create" class="btn btn-primary btn-sm" id="btnCreateFirst">
                         <i class="fas fa-plus me-2"></i>Tambah Team
                     </a>
                 </div>
@@ -173,17 +199,19 @@
                                 </div>
                                 <div class="team-info">
                                     <div class="team-name">
-                                        <?= $row['member_name'] ?? $row['username'] ?>
+                                        <?= esc($row['member_name'] ?? $row['username']) ?>
                                     </div>
-                                    <div class="team-role"><?= $row['role_in_project'] == 'project_manager' ? 'Project Manager' : ($row['role_in_project'] == 'staff' ? 'Staff' : 'Client') ?></div>
-                                    <small class="text-muted d-block mt-1"><?= $row['email'] ?></small>
+                                    <div class="team-role">
+                                        <?= $row['role_in_project'] == 'project_manager' ? 'Project Manager' : ($row['role_in_project'] == 'staff' ? 'Staff' : 'Client') ?>
+                                    </div>
+                                    <small class="text-muted d-block mt-1"><?= esc($row['email']) ?></small>
                                 </div>
                             </div>
 
                             <div class="mb-2">
                                 <small class="text-muted d-block">
                                     <i class="fas fa-project-diagram me-2"></i>
-                                    <strong><?= $row['project_name'] ?></strong>
+                                    <strong><?= esc($row['project_name']) ?></strong>
                                 </small>
                                 <small class="text-muted">
                                     <i class="fas fa-tag me-2"></i>
@@ -195,22 +223,22 @@
                                 <?php if($row['role_in_project'] == 'staff'): ?>
                                     <span class="badge-status bg-secondary">
                                         <i class="fas fa-briefcase me-1"></i>
-                                        <?= $row['position_name'] ?? '-' ?>
+                                        <?= esc($row['position_name'] ?? '-') ?>
                                     </span>
                                     <br>
                                     <small class="text-muted">
                                         <i class="fas fa-building me-1"></i>
-                                        <?= $row['department_name'] ?? '-' ?>
+                                        <?= esc($row['department_name'] ?? '-') ?>
                                     </small>
                                 <?php elseif($row['role_in_project'] == 'client'): ?>
                                     <span class="badge-status bg-secondary">
                                         <i class="fas fa-building me-1"></i>
-                                        <?= $row['company_name'] ?? '-' ?>
+                                        <?= esc($row['company_name'] ?? '-') ?>
                                     </span>
                                     <br>
                                     <small class="text-muted">
                                         <i class="fas fa-user-tie me-1"></i>
-                                        <?= $row['contact_person'] ?? '-' ?>
+                                        <?= esc($row['contact_person'] ?? '-') ?>
                                     </small>
                                 <?php else: ?>
                                     <span class="badge-status bg-secondary">
@@ -221,14 +249,15 @@
                             </div>
 
                             <div class="d-flex justify-content-between mt-3 pt-2 border-top">
-                                <a href="/admin/teams/<?= $row['id'] ?>" class="btn btn-sm btn-info" title="Detail">
+                                <a href="/admin/teams/<?= $row['id'] ?>" class="btn btn-sm btn-info" title="Detail" data-detail-link data-id="<?= $row['id'] ?>">
                                     <i class="fas fa-eye"></i> Detail
                                 </a>
-                                <a href="/admin/teams/edit/<?= $row['id'] ?>" class="btn btn-sm btn-warning" title="Edit">
+                                <a href="/admin/teams/edit/<?= $row['id'] ?>" class="btn btn-sm btn-warning" title="Edit" data-edit-link data-id="<?= $row['id'] ?>">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
-                                <a href="/admin/teams/delete/<?= $row['id'] ?>" class="btn btn-sm btn-danger" 
-                                   onclick="return confirm('Yakin ingin menghapus member ini dari project?')" title="Hapus">
+                                <a href="javascript:void(0)" class="btn btn-sm btn-danger" 
+                                   onclick="confirmDelete(<?= $row['id'] ?>, '<?= addslashes($row['member_name'] ?? $row['username']) ?>')" 
+                                   title="Hapus">
                                     <i class="fas fa-trash"></i> Hapus
                                 </a>
                             </div>
@@ -262,19 +291,21 @@
                                 <td colspan="6" class="text-center py-4">
                                     <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
                                     <p class="text-muted">Belum ada data team</p>
-                                </td>
+                                 </div>
+                                 </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach($teams as $key => $row): ?>
                                 <tr>
                                     <td class="text-center"><?= $key+1 ?></td>
                                     <td>
-                                        <strong><?= $row['project_name'] ?></strong>
+                                        <strong><?= esc($row['project_name']) ?></strong>
                                         <br>
                                         <small class="text-muted">
                                             <?= $row['project_type'] == 'internal' ? '🏢 Internal' : '🤝 Client' ?>
                                         </small>
-                                    </td>
+                                     </div>
+                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
@@ -282,12 +313,13 @@
                                                 <?= strtoupper(substr($row['member_name'] ?? $row['username'], 0, 1)) ?>
                                             </div>
                                             <div>
-                                                <strong><?= $row['member_name'] ?? $row['username'] ?></strong>
+                                                <strong><?= esc($row['member_name'] ?? $row['username']) ?></strong>
                                                 <br>
-                                                <small class="text-muted"><?= $row['email'] ?></small>
+                                                <small class="text-muted"><?= esc($row['email']) ?></small>
                                             </div>
                                         </div>
-                                    </td>
+                                     </div>
+                                     </td>
                                     <td>
                                         <?php 
                                         $roleClass = '';
@@ -307,27 +339,28 @@
                                             <i class="fas <?= $roleIcon ?> me-1"></i>
                                             <?= str_replace('_', ' ', ucfirst($row['role_in_project'])) ?>
                                         </span>
-                                    </td>
+                                     </div>
+                                     </td>
                                     <td>
                                         <?php if($row['role_in_project'] == 'staff'): ?>
                                             <span class="badge bg-secondary">
                                                 <i class="fas fa-briefcase me-1"></i>
-                                                <?= $row['position_name'] ?? '-' ?>
+                                                <?= esc($row['position_name'] ?? '-') ?>
                                             </span>
                                             <br>
                                             <small class="text-muted">
                                                 <i class="fas fa-building me-1"></i>
-                                                <?= $row['department_name'] ?? '-' ?>
+                                                <?= esc($row['department_name'] ?? '-') ?>
                                             </small>
                                         <?php elseif($row['role_in_project'] == 'client'): ?>
                                             <span class="badge bg-secondary">
                                                 <i class="fas fa-building me-1"></i>
-                                                <?= $row['company_name'] ?? '-' ?>
+                                                <?= esc($row['company_name'] ?? '-') ?>
                                             </span>
                                             <br>
                                             <small class="text-muted">
                                                 <i class="fas fa-user-tie me-1"></i>
-                                                <?= $row['contact_person'] ?? '-' ?>
+                                                <?= esc($row['contact_person'] ?? '-') ?>
                                             </small>
                                         <?php else: ?>
                                             <span class="badge bg-secondary">
@@ -335,21 +368,24 @@
                                                 Project Manager
                                             </span>
                                         <?php endif; ?>
-                                    </td>
+                                     </div>
+                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="/admin/teams/<?= $row['id'] ?>" class="btn btn-info btn-sm" title="Detail">
+                                            <a href="/admin/teams/<?= $row['id'] ?>" class="btn btn-info btn-sm" title="Detail" data-detail-link data-id="<?= $row['id'] ?>">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="/admin/teams/edit/<?= $row['id'] ?>" class="btn btn-warning btn-sm" title="Edit">
+                                            <a href="/admin/teams/edit/<?= $row['id'] ?>" class="btn btn-warning btn-sm" title="Edit" data-edit-link data-id="<?= $row['id'] ?>">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="/admin/teams/delete/<?= $row['id'] ?>" class="btn btn-danger btn-sm" 
-                                               onclick="return confirm('Yakin ingin menghapus member ini dari project?')" title="Hapus">
+                                            <a href="javascript:void(0)" class="btn btn-danger btn-sm" 
+                                               onclick="confirmDelete(<?= $row['id'] ?>, '<?= addslashes($row['member_name'] ?? $row['username']) ?>')" 
+                                               title="Hapus">
                                                 <i class="fas fa-trash"></i>
                                             </a>
                                         </div>
-                                    </td>
+                                     </div>
+                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -360,7 +396,70 @@
     </div>
 </div>
 
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Memproses...</p>
+    </div>
+</div>
+
 <script>
+// Loading Overlay
+function showLoading(message = 'Memproses...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Konfirmasi Delete dengan pesan detail
+function confirmDelete(id, memberName) {
+    if (confirm(`⚠️ PERINGATAN!\n\nYakin ingin menghapus member "${memberName}" dari project?\n\nData keanggotaan akan dihapus.\n\nTindakan ini TIDAK DAPAT DIBATALKAN.\n\nKlik OK untuk menghapus.`)) {
+        showLoading('Menghapus member dari team...');
+        setTimeout(() => {
+            window.location.href = '/admin/teams/delete/' + id;
+        }, 200);
+    }
+}
+
+// Loading untuk tombol create
+document.getElementById('btnCreate')?.addEventListener('click', function(e) {
+    showLoading('Membuka form tambah team...');
+});
+document.getElementById('btnCreateFirst')?.addEventListener('click', function(e) {
+    showLoading('Membuka form tambah team...');
+});
+
+// Loading untuk tombol detail dan edit
+document.querySelectorAll('[data-detail-link]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        showLoading('Memuat detail team member...');
+    });
+});
+document.querySelectorAll('[data-edit-link]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        showLoading('Membuka form edit team member...');
+    });
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto-hide flash messages
 setTimeout(function() {
     let alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {

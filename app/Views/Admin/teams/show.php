@@ -1,6 +1,35 @@
 <?= $this->extend('layout/app') ?>
 <?= $this->section('content') ?>
 
+<style>
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #0dcaf0;
+        font-weight: 500;
+    }
+</style>
+
 <div class="card shadow">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
@@ -8,10 +37,10 @@
             <?= $title ?>
         </h5>
         <div>
-            <a href="/admin/teams/edit/<?= $team['id'] ?>" class="btn btn-warning btn-sm me-2">
+            <a href="/admin/teams/edit/<?= $team['id'] ?>" class="btn btn-warning btn-sm me-2" id="btnEdit">
                 <i class="fas fa-edit me-2"></i>Edit
             </a>
-            <a href="/admin/teams" class="btn btn-secondary btn-sm">
+            <a href="/admin/teams" class="btn btn-secondary btn-sm" id="btnBack">
                 <i class="fas fa-arrow-left me-2"></i>Kembali
             </a>
         </div>
@@ -32,8 +61,8 @@
                      style="width: 120px; height: 120px; font-size: 48px; background: linear-gradient(135deg, #667eea, #764ba2);">
                     <?= strtoupper(substr($team['member_name'] ?? $team['username'], 0, 1)) ?>
                 </div>
-                <h4><?= $team['member_name'] ?? $team['username'] ?></h4>
-                <p class="text-muted"><?= $team['email'] ?></p>
+                <h4><?= esc($team['member_name'] ?? $team['username']) ?></h4>
+                <p class="text-muted"><?= esc($team['email']) ?></p>
                 <?php 
                 $roleBadge = '';
                 $roleIcon = '';
@@ -71,7 +100,7 @@
                                 <table class="table table-borderless">
                                     <tr>
                                         <th width="120">Project</th>
-                                        <td>: <strong><?= $team['project_name'] ?></strong></td>
+                                        <td>: <strong><?= esc($team['project_name']) ?></strong></td>
                                     </tr>
                                     <tr>
                                         <th>Type</th>
@@ -79,7 +108,8 @@
                                             <span class="badge <?= $team['project_type'] == 'internal' ? 'bg-secondary' : 'bg-success' ?>">
                                                 <?= ucfirst($team['project_type']) ?>
                                             </span>
-                                        </td>
+                                         </div>
+                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Start Date</th>
@@ -95,15 +125,15 @@
                                 <table class="table table-borderless">
                                     <tr>
                                         <th width="120">Company</th>
-                                        <td>: <?= $team['company_name'] ?? '-' ?></td>
+                                        <td>: <?= esc($team['company_name'] ?? '-') ?></td>
                                     </tr>
                                     <tr>
                                         <th>Contact</th>
-                                        <td>: <?= $team['contact_person'] ?? '-' ?></td>
+                                        <td>: <?= esc($team['contact_person'] ?? '-') ?></td>
                                     </tr>
                                     <tr>
                                         <th>Phone</th>
-                                        <td>: <?= $team['company_phone'] ?? '-' ?></td>
+                                        <td>: <?= esc($team['company_phone'] ?? '-') ?></td>
                                     </tr>
                                 </table>
                             </div>
@@ -122,19 +152,23 @@
                                 <table class="table table-borderless">
                                     <tr>
                                         <th width="120">Full Name</th>
-                                        <td>: <?= ($team['first_name'] ?? '') . ' ' . ($team['last_name'] ?? '') ?></td>
+                                        <td>: <?= esc(($team['first_name'] ?? '') . ' ' . ($team['last_name'] ?? '')) ?>?</div>
+                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Username</th>
-                                        <td>: <?= $team['username'] ?></td>
+                                        <td>: <?= esc($team['username']) ?>?</div>
+                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Email</th>
-                                        <td>: <?= $team['email'] ?></td>
+                                        <td>: <?= esc($team['email']) ?>?</div>
+                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Phone</th>
-                                        <td>: <?= $team['phone'] ?? '-' ?></td>
+                                        <td>: <?= esc($team['phone'] ?? '-') ?>?</div>
+                                         </td>
                                     </tr>
                                 </table>
                             </div>
@@ -144,15 +178,18 @@
                                 <table class="table table-borderless">
                                     <tr>
                                         <th width="120">Position</th>
-                                        <td>: <strong><?= $team['position_name'] ?? '-' ?></strong></td>
+                                        <td>: <strong><?= esc($team['position_name'] ?? '-') ?></strong>?</div>
+                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Department</th>
-                                        <td>: <?= $team['department_name'] ?? '-' ?></td>
+                                        <td>: <?= esc($team['department_name'] ?? '-') ?>?</div>
+                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Hire Date</th>
-                                        <td>: <?= isset($team['hire_date']) ? date('d M Y', strtotime($team['hire_date'])) : '-' ?></td>
+                                        <td>: <?= isset($team['hire_date']) ? date('d M Y', strtotime($team['hire_date'])) : '-' ?>?</div>
+                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Status</th>
@@ -160,23 +197,27 @@
                                             <span class="badge <?= ($team['employee_status'] ?? '') == 'permanent' ? 'bg-success' : 'bg-warning' ?>">
                                                 <?= ucfirst($team['employee_status'] ?? '-') ?>
                                             </span>
-                                        </td>
+                                         </div>
+                                         </td>
                                     </tr>
-                                </table>
+                                ｜DSML｜
                                 <?php elseif($team['role_in_project'] == 'client'): ?>
                                 <h6 class="text-primary"><i class="fas fa-building me-2"></i>Company Information</h6>
                                 <table class="table table-borderless">
                                     <tr>
                                         <th width="120">Company</th>
-                                        <td>: <strong><?= $team['company_name'] ?? '-' ?></strong></td>
+                                        <td>: <strong><?= esc($team['company_name'] ?? '-') ?></strong>?</div>
+                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Contact Person</th>
-                                        <td>: <?= $team['contact_person'] ?? '-' ?></td>
+                                        <td>: <?= esc($team['contact_person'] ?? '-') ?>?</div>
+                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Company Phone</th>
-                                        <td>: <?= $team['company_phone'] ?? '-' ?></td>
+                                        <td>: <?= esc($team['company_phone'] ?? '-') ?>?</div>
+                                         </td>
                                     </tr>
                                 </table>
                                 <?php else: ?>
@@ -184,11 +225,13 @@
                                 <table class="table table-borderless">
                                     <tr>
                                         <th width="120">Position</th>
-                                        <td>: <strong><?= $team['position_name'] ?? 'Project Manager' ?></strong></td>
+                                        <td>: <strong><?= esc($team['position_name'] ?? 'Project Manager') ?></strong>?</div>
+                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Department</th>
-                                        <td>: <?= $team['department_name'] ?? 'Management' ?></td>
+                                        <td>: <?= esc($team['department_name'] ?? 'Management') ?>?</div>
+                                         </td>
                                     </tr>
                                 </table>
                                 <?php endif; ?>
@@ -205,19 +248,19 @@
                         <div class="row text-center">
                             <div class="col-md-3">
                                 <div class="border rounded p-3">
-                                    <h3 class="text-primary">0</h3>
+                                    <h3 class="text-primary"><?= $totalTasks ?? 0 ?></h3>
                                     <small class="text-muted">Tasks Assigned</small>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="border rounded p-3">
-                                    <h3 class="text-success">0</h3>
+                                    <h3 class="text-success"><?= $completedTasks ?? 0 ?></h3>
                                     <small class="text-muted">Tasks Completed</small>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="border rounded p-3">
-                                    <h3 class="text-warning">0</h3>
+                                    <h3 class="text-warning"><?= $issuesReported ?? 0 ?></h3>
                                     <small class="text-muted">Issues Reported</small>
                                 </div>
                             </div>
@@ -234,5 +277,58 @@
         </div>
     </div>
 </div>
+
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-info" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Memproses...</p>
+    </div>
+</div>
+
+<script>
+// Loading Overlay
+function showLoading(message = 'Memproses...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Loading untuk tombol edit
+document.getElementById('btnEdit')?.addEventListener('click', function(e) {
+    showLoading('Membuka form edit team member...');
+});
+
+// Loading untuk tombol kembali
+document.getElementById('btnBack')?.addEventListener('click', function(e) {
+    showLoading('Kembali ke daftar team...');
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto-hide flash messages
+setTimeout(function() {
+    let alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        let bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    });
+}, 5000);
+</script>
 
 <?= $this->endSection() ?>

@@ -5,48 +5,52 @@
     .form-card {
         background: white;
         border-radius: 15px;
-        padding: 30px;
+        padding: 25px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        max-width: 500px;
-        margin: 0 auto;
     }
-    .form-label {
-        font-weight: 500;
-        margin-bottom: 8px;
+    .is-invalid {
+        border-color: #dc3545 !important;
     }
-    .required:after {
-        content: " *";
-        color: red;
+    .invalid-feedback {
+        display: block;
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
     }
 </style>
 
-<div class="container-fluid px-0">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0">
-            <i class="fas fa-key me-2 text-primary"></i>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            <i class="fas fa-key me-2 text-warning"></i>
             Ganti Password
-        </h4>
-        <a href="<?= base_url('profile') ?>" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Kembali
+        </h1>
+        <a href="<?= base_url('profile') ?>" class="btn btn-outline-secondary" id="btnKembali">
+            <i class="fas fa-arrow-left me-1"></i> Kembali
         </a>
     </div>
 
-    <?php if(session()->getFlashdata('error')): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('error') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if(session()->getFlashdata('success')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('success') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
     <?php if(session()->getFlashdata('errors')): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i>
             <ul class="mb-0">
                 <?php foreach(session()->getFlashdata('errors') as $error): ?>
                     <li><?= $error ?></li>
@@ -57,35 +61,141 @@
     <?php endif; ?>
 
     <div class="form-card">
-        <form action="<?= base_url('profile/update-password') ?>" method="post">
+        <form action="<?= base_url('profile/update-password') ?>" method="post" id="changePasswordForm">
             <?= csrf_field() ?>
             
             <div class="mb-3">
-                <label class="form-label required">Password Saat Ini</label>
-                <input type="password" name="current_password" class="form-control" required>
+                <label class="form-label">Password Lama <span class="text-danger">*</span></label>
+                <input type="password" name="old_password" class="form-control" required>
+                <div class="invalid-feedback">Password lama wajib diisi</div>
             </div>
             
             <div class="mb-3">
-                <label class="form-label required">Password Baru</label>
-                <input type="password" name="new_password" class="form-control" required>
+                <label class="form-label">Password Baru <span class="text-danger">*</span></label>
+                <input type="password" name="new_password" class="form-control" id="new_password" required>
                 <small class="text-muted">Minimal 6 karakter</small>
+                <div class="invalid-feedback">Password baru minimal 6 karakter</div>
             </div>
             
             <div class="mb-3">
-                <label class="form-label required">Konfirmasi Password Baru</label>
-                <input type="password" name="confirm_password" class="form-control" required>
+                <label class="form-label">Konfirmasi Password Baru <span class="text-danger">*</span></label>
+                <input type="password" name="confirm_password" class="form-control" id="confirm_password" required>
+                <div class="invalid-feedback">Konfirmasi password tidak cocok</div>
             </div>
 
-            <div class="border-top pt-3 mt-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save me-2"></i>Ganti Password
+            <div class="d-flex justify-content-end gap-2">
+                <a href="<?= base_url('profile') ?>" class="btn btn-secondary" id="btnBatal">Batal</a>
+                <button type="submit" class="btn btn-warning" id="btnUpdate">
+                    <i class="fas fa-save me-1"></i>
+                    <span class="btn-text">Update Password</span>
+                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
                 </button>
-                <a href="<?= base_url('profile') ?>" class="btn btn-secondary">
-                    <i class="fas fa-times me-2"></i>Batal
-                </a>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage" class="mt-2 mb-0">Mengupdate password...</p>
+    </div>
+</div>
+
+<script>
+function validateForm() {
+    let isValid = true;
+    
+    document.querySelectorAll('.is-invalid').forEach(el => {
+        el.classList.remove('is-invalid');
+    });
+    
+    const oldPassword = document.querySelector('input[name="old_password"]');
+    if (!oldPassword.value.trim()) {
+        oldPassword.classList.add('is-invalid');
+        isValid = false;
+    }
+    
+    const newPassword = document.querySelector('input[name="new_password"]');
+    if (!newPassword.value.trim() || newPassword.value.trim().length < 6) {
+        newPassword.classList.add('is-invalid');
+        isValid = false;
+    }
+    
+    const confirmPassword = document.querySelector('input[name="confirm_password"]');
+    if (newPassword.value.trim() !== confirmPassword.value.trim()) {
+        confirmPassword.classList.add('is-invalid');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+function showLoading(message = 'Mengupdate password...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.textContent = message;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+document.getElementById('changePasswordForm')?.addEventListener('submit', function(e) {
+    if (!validateForm()) {
+        e.preventDefault();
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstError.focus();
+        }
+        return false;
+    }
+    
+    const btn = document.getElementById('btnUpdate');
+    btn.disabled = true;
+    btn.querySelector('.btn-text').textContent = 'Memproses...';
+    btn.querySelector('.spinner-border').classList.remove('d-none');
+    
+    showLoading('Mengupdate password...');
+});
+
+document.getElementById('btnKembali')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    showLoading('Mengalihkan halaman...');
+    setTimeout(() => {
+        window.location.href = this.getAttribute('href');
+    }, 200);
+});
+
+document.getElementById('btnBatal')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    showLoading('Mengalihkan halaman...');
+    setTimeout(() => {
+        window.location.href = this.getAttribute('href');
+    }, 200);
+});
+
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+setTimeout(function() {
+    let alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        let bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    });
+}, 5000);
+</script>
 
 <?= $this->endSection() ?>

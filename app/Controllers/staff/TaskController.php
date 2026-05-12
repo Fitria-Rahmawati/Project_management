@@ -40,8 +40,12 @@ class TaskController extends BaseController
                 ->groupEnd();
         }
 
+        // ✅ AMBIL DATA TASKS
+        $tasks = $builder->get()->getResultArray();
+
         $data = [
             'title' => 'My Tasks',
+            'tasks' => $tasks,        // ← TAMBAHKAN INI
             'status' => $status,
             'priority' => $priority,
             'search' => $search
@@ -50,39 +54,41 @@ class TaskController extends BaseController
         return view('staff/tasks/index', $data);
     }
 
-   public function show($id)
-{
-    $userId = session()->get('user_id');
+    public function show($id)
+    {
+        $userId = session()->get('user_id');
 
-    $task = $this->db->table('issues i')
-        ->select('i.*, p.project_name, reporter.username as reporter_name')
-        ->join('projects p', 'p.id = i.project_id')
-        ->join('users reporter', 'reporter.id = i.reporter_id', 'left')
-        ->where('i.id', $id)
-        ->where('i.assignee_id', $userId)
-        ->get()
-        ->getRowArray();
+        $task = $this->db->table('issues i')
+            ->select('i.*, p.project_name, reporter.username as reporter_name')
+            ->join('projects p', 'p.id = i.project_id')
+            ->join('users reporter', 'reporter.id = i.reporter_id', 'left')
+            ->where('i.id', $id)
+            ->where('i.assignee_id', $userId)
+            ->get()
+            ->getRowArray();
 
-    if (!$task) {
-        return redirect()->to('staff/tasks')->with('error', 'Task tidak ditemukan');
+        if (!$task) {
+            return redirect()->to('staff/tasks')->with('error', 'Task tidak ditemukan');
+        }
+
+        // Ambil komentar (bukan history)
+        $comments = $this->db->table('issue_logs')
+            ->select('issue_logs.*, users.username as user_name')
+            ->join('users', 'users.id = issue_logs.changed_by', 'left')
+            ->where('issue_id', $id)
+            ->where('new_status', 'IS', null)  // Hanya komentar
+            ->orderBy('changed_at', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $data = [
+            'title' => 'Task Detail',
+            'task' => $task,
+            'comments' => $comments,
+            'totalHours' => $task['actual_hours'] ?? 0
+        ];
+        return view('staff/tasks/show', $data);
     }
-
-    $history = $this->db->table('issue_logs')
-        ->select('issue_logs.*, users.username as user_name')
-        ->join('users', 'users.id = issue_logs.changed_by', 'left')
-        ->where('issue_id', $id)
-        ->orderBy('changed_at', 'DESC')
-        ->get()
-        ->getResultArray();
-
-    $data = [
-        'title' => 'Task Detail',
-        'task' => $task,
-        'history' => $history,
-        'totalHours' => $task['actual_hours'] ?? 0
-    ];
-    return view('staff/tasks/show', $data);
-}
 
     public function updateStatus($id)
     {
@@ -128,9 +134,10 @@ class TaskController extends BaseController
             return redirect()->back()->with('error', 'Komentar tidak boleh kosong');
         }
 
+        // Simpan komentar (new_status = null)
         $this->db->table('issue_logs')->insert([
             'issue_id' => $id,
-            'old_status' => $comment,
+            'old_status' => $comment,    // Simpan komentar di old_status
             'new_status' => null,
             'changed_by' => $userId,
             'changed_at' => date('Y-m-d H:i:s')
@@ -166,7 +173,6 @@ class TaskController extends BaseController
             ->where('id', $id)
             ->update(['actual_hours' => $newHours]);
 
-  
         $this->db->table('issue_logs')->insert([
             'issue_id' => $id,
             'old_status' => $description ?? 'Logged ' . $hours . ' hours',

@@ -2,6 +2,45 @@
 <?= $this->section('content') ?>
 
 <style>
+    /* ==================== LOADING OVERLAY ==================== */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e3e6f0;
+        border-top-color: #36b9cc;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #36b9cc;
+        font-weight: 500;
+    }
+
     .progress-header {
         background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
         padding: 25px;
@@ -15,6 +54,10 @@
         padding: 15px;
         text-align: center;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: transform 0.3s;
+    }
+    .stat-box:hover {
+        transform: translateY(-3px);
     }
     .priority-high { background: #e74a3b; color: white; }
     .priority-medium { background: #f6c23e; color: #333; }
@@ -35,18 +78,71 @@
         border-radius: 50%;
         background: #36b9cc;
     }
+    .btn-pdf {
+        background: #dc3545;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        color: white;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-pdf:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        color: white;
+    }
+    .btn-back {
+        background: #6c757d;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        color: white;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-back:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        color: white;
+    }
+    .btn-lapor {
+        background: #dc3545;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 6px;
+        color: white;
+        font-size: 12px;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .btn-lapor:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        color: white;
+    }
 </style>
 
 <div class="container-fluid">
-    <!-- Tombol Kembali -->
-    <div class="mb-3">
-        <a href="<?= base_url('client/progress') ?>" class="btn btn-outline-secondary btn-sm">
+    <!-- Tombol Kembali & Export -->
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <a href="<?= base_url('client/progress') ?>" class="btn-back" id="btnBack">
             <i class="fas fa-arrow-left me-1"></i> Kembali ke Progress Report
         </a>
+        <a href="<?= base_url('client/export-progress') ?>" class="btn-pdf" target="_blank" id="btnExport">
+            <i class="fas fa-file-pdf me-2"></i> Export PDF
+        </a>
     </div>
-<a href="<?= base_url('client/export-progress') ?>" class="btn btn-danger" target="_blank">
-    <i class="fas fa-file-pdf me-2"></i> Export PDF
-</a>
+
     <!-- Header -->
     <div class="progress-header">
         <div class="d-flex justify-content-between align-items-start">
@@ -155,7 +251,7 @@
                 <i class="fas fa-list me-2 text-primary"></i>
                 Daftar Kendala
             </h6>
-            <a href="<?= base_url('client/issues/create?project_id=' . $project['id']) ?>" class="btn btn-danger btn-sm">
+            <a href="<?= base_url('client/issues/create?project_id=' . $project['id']) ?>" class="btn-lapor" id="btnLapor">
                 <i class="fas fa-plus me-1"></i> Lapor Kendala
             </a>
         </div>
@@ -184,7 +280,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge <?= $issue['status'] == 'Done' ? 'bg-success' : ($issue['status'] == 'in_progress' ? 'bg-warning' : 'bg-secondary') ?>">
+                                        <span class="badge <?= $issue['status'] == 'done' ? 'bg-success' : ($issue['status'] == 'in_progress' ? 'bg-warning' : 'bg-secondary') ?>">
                                             <?= str_replace('_', ' ', ucfirst($issue['status'])) ?>
                                         </span>
                                     </td>
@@ -200,8 +296,33 @@
     </div>
 </div>
 
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p id="loadingMessage">Memuat data...</p>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+// Loading Overlay functions
+const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingMessage = document.getElementById('loadingMessage');
+
+function showLoading(message = 'Memuat data...') {
+    if (loadingOverlay) {
+        if (loadingMessage) loadingMessage.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        loadingOverlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
+    }
+}
+
 // Chart Status
 const statusCtx = document.getElementById('statusChart').getContext('2d');
 const statusData = <?= json_encode($issuesByStatus) ?>;
@@ -219,7 +340,12 @@ new Chart(statusCtx, {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
     }
 });
 
@@ -246,11 +372,47 @@ new Chart(priorityCtx, {
         scales: {
             y: {
                 beginAtZero: true,
-                stepSize: 1
+                stepSize: 1,
+                grid: {
+                    color: '#e3e6f0'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
             }
         }
     }
 });
+
+// Loading untuk navigasi
+document.getElementById('btnBack')?.addEventListener('click', function(e) {
+    showLoading('Kembali ke progress report...');
+});
+document.getElementById('btnExport')?.addEventListener('click', function(e) {
+    showLoading('Menyiapkan file PDF...');
+    setTimeout(() => {
+        hideLoading();
+    }, 2000);
+});
+document.getElementById('btnLapor')?.addEventListener('click', function(e) {
+    showLoading('Membuka form laporan kendala...');
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto close alerts jika ada
+setTimeout(function() {
+    let alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        let bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    });
+}, 5000);
 </script>
 
 <?= $this->endSection() ?>

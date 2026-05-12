@@ -37,6 +37,10 @@
         text-align: center;
         box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
         border-bottom: 3px solid;
+        transition: transform 0.3s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
     }
 
     .stat-card.blue { border-bottom-color: var(--primary); }
@@ -110,6 +114,7 @@
     .badge-warning { background: #fff3e0; color: var(--warning); }
     .badge-danger { background: #fee2e2; color: var(--danger); }
     .badge-info { background: #e1f5fe; color: var(--info); }
+    .badge-primary { background: #e3f2fd; color: var(--primary); }
 
     .progress-bar {
         width: 100%;
@@ -127,6 +132,56 @@
         transition: width 0.3s ease;
     }
 
+    .table {
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+    .table th {
+        background: #f8f9fc;
+        font-weight: 600;
+    }
+
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: var(--primary);
+        font-weight: 500;
+    }
+
+    .refresh-btn {
+        background: var(--primary);
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+    .refresh-btn:hover {
+        background: #2e59d9;
+        transform: translateY(-2px);
+    }
+
     @media (max-width: 768px) {
         .monitoring-content {
             padding: 20px;
@@ -139,11 +194,19 @@
 
 <main class="monitoring-content">
     
-    <h2 class="page-title">
-        <i class="fas fa-chart-line me-2 text-primary"></i> Monitoring Sistem
-    </h2>
-    <p class="text-muted">Pantau seluruh aktivitas dan performa sistem</p>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="page-title">
+                <i class="fas fa-chart-line me-2 text-primary"></i> Monitoring Sistem
+            </h2>
+            <p class="text-muted">Pantau seluruh aktivitas dan performa sistem</p>
+        </div>
+        <button class="btn refresh-btn" id="btnRefresh">
+            <i class="fas fa-sync-alt me-2"></i> Refresh Data
+        </button>
+    </div>
 
+    <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-card blue">
             <div class="stat-number"><?= $totalProjects ?? 0 ?></div>
@@ -163,8 +226,9 @@
         </div>
     </div>
 
+    <!-- First Monitoring Grid -->
     <div class="monitoring-grid">
-   
+        <!-- Proyek by Status -->
         <div class="monitoring-card">
             <div class="card-header">
                 <i class="fas fa-chart-pie"></i> Proyek by Status
@@ -175,7 +239,7 @@
                 <?php else: ?>
                     <?php foreach($projectsByStatus as $status): ?>
                     <div class="list-item">
-                        <span><?= $status['status'] ?? 'Unknown' ?></span>
+                        <span><?= esc($status['status'] ?? 'Unknown') ?></span>
                         <span class="badge badge-info"><?= $status['total'] ?> proyek</span>
                     </div>
                     <?php endforeach; ?>
@@ -183,6 +247,7 @@
             </div>
         </div>
 
+        <!-- Issues by Status -->
         <div class="monitoring-card">
             <div class="card-header">
                 <i class="fas fa-exclamation-circle"></i> Issues by Status
@@ -193,8 +258,8 @@
                 <?php else: ?>
                     <?php foreach($issuesByStatus as $status): ?>
                     <div class="list-item">
-                        <span><?= $status['status'] ?? 'Unknown' ?></span>
-                        <span class="badge <?= $status['status'] == 'Done' ? 'badge-success' : ($status['status'] == 'In Progress' ? 'badge-warning' : 'badge-danger') ?>">
+                        <span><?= esc($status['status'] ?? 'Unknown') ?></span>
+                        <span class="badge <?= $status['status'] == 'Done' || $status['status'] == 'Closed' ? 'badge-success' : ($status['status'] == 'In Progress' ? 'badge-warning' : 'badge-danger') ?>">
                             <?= $status['total'] ?> issues
                         </span>
                     </div>
@@ -203,6 +268,7 @@
             </div>
         </div>
 
+        <!-- Issues by Priority -->
         <div class="monitoring-card">
             <div class="card-header">
                 <i class="fas fa-flag"></i> Issues by Priority
@@ -213,8 +279,8 @@
                 <?php else: ?>
                     <?php foreach($issuesByPriority as $priority): ?>
                     <div class="list-item">
-                        <span><?= $priority['priority'] ?? 'Unknown' ?></span>
-                        <span class="badge <?= $priority['priority'] == 'High' ? 'badge-danger' : ($priority['priority'] == 'Medium' ? 'badge-warning' : 'badge-success') ?>">
+                        <span><?= esc($priority['priority'] ?? 'Unknown') ?></span>
+                        <span class="badge <?= $priority['priority'] == 'High' || $priority['priority'] == 'Highest' ? 'badge-danger' : ($priority['priority'] == 'Medium' ? 'badge-warning' : 'badge-success') ?>">
                             <?= $priority['total'] ?> issues
                         </span>
                     </div>
@@ -223,6 +289,7 @@
             </div>
         </div>
 
+        <!-- User Activity -->
         <div class="monitoring-card">
             <div class="card-header">
                 <i class="fas fa-users"></i> User Activity
@@ -242,14 +309,15 @@
                 </div>
                 <div class="list-item">
                     <span>Active Rate</span>
-                    <span class="badge badge-info"><?= $userActivityStats['active_percentage'] ?? 0 ?>%</span>
+                    <span class="badge badge-primary"><?= $userActivityStats['active_percentage'] ?? 0 ?>%</span>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Second Monitoring Grid -->
     <div class="monitoring-grid" style="margin-top: 20px;">
-  
+        <!-- Overdue Issues -->
         <div class="monitoring-card">
             <div class="card-header">
                 <i class="fas fa-clock text-danger"></i> Overdue Issues
@@ -263,8 +331,8 @@
                     <?php foreach(array_slice($overdueIssues, 0, 5) as $issue): ?>
                     <div class="list-item">
                         <div>
-                            <div class="fw-bold"><?= $issue['title'] ?? '-' ?></div>
-                            <small class="text-muted"><?= $issue['project_name'] ?? '-' ?> | Assignee: <?= $issue['assignee_name'] ?? '-' ?></small>
+                            <div class="fw-bold"><?= esc($issue['title'] ?? '-') ?></div>
+                            <small class="text-muted"><?= esc($issue['project_name'] ?? '-') ?> | Assignee: <?= esc($issue['assignee_name'] ?? '-') ?></small>
                         </div>
                         <span class="badge badge-danger">Due: <?= date('d/m/Y', strtotime($issue['due_date'])) ?></span>
                     </div>
@@ -273,6 +341,7 @@
             </div>
         </div>
 
+        <!-- Top Performing Staff -->
         <div class="monitoring-card">
             <div class="card-header">
                 <i class="fas fa-trophy text-warning"></i> Top Performing Staff
@@ -286,13 +355,13 @@
                     <?php foreach($topStaff as $staff): ?>
                     <div class="list-item">
                         <div>
-                            <div class="fw-bold"><?= ($staff['first_name'] ?? $staff['username']) . ' ' . ($staff['last_name'] ?? '') ?></div>
-                            <small class="text-muted"><?= $staff['position_name'] ?? 'Staff' ?></small>
+                            <div class="fw-bold"><?= esc(($staff['first_name'] ?? $staff['username']) . ' ' . ($staff['last_name'] ?? '')) ?></div>
+                            <small class="text-muted"><?= esc($staff['position_name'] ?? 'Staff') ?></small>
                         </div>
                         <div class="text-end">
-                            <div><?= $staff['completed_issues'] ?? 0 ?> / <?= $staff['total_issues'] ?? 0 ?></div>
+                            <div><?= ($staff['completed_issues'] ?? 0) + ($staff['closed_issues'] ?? 0) ?> / <?= $staff['total_issues'] ?? 0 ?></div>
                             <div class="progress-bar" style="width: 80px;">
-                                <div class="progress-fill" style="width: <?= ($staff['total_issues'] ?? 0) > 0 ? round((($staff['completed_issues'] ?? 0) / ($staff['total_issues'] ?? 1)) * 100) : 0 ?>%"></div>
+                                <div class="progress-fill" style="width: <?= ($staff['total_issues'] ?? 0) > 0 ? round(((($staff['completed_issues'] ?? 0) + ($staff['closed_issues'] ?? 0)) / ($staff['total_issues'] ?? 1)) * 100) : 0 ?>%"></div>
                             </div>
                         </div>
                     </div>
@@ -302,6 +371,7 @@
         </div>
     </div>
 
+    <!-- Project Progress Table -->
     <div class="monitoring-card" style="margin-top: 20px;">
         <div class="card-header">
             <i class="fas fa-chart-line"></i> Project Progress
@@ -310,45 +380,99 @@
             <?php if(empty($projectProgress)): ?>
                 <div class="list-item text-center text-muted">Belum ada data proyek</div>
             <?php else: ?>
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Project</th>
-                            <th>Company</th>
-                            <th>Progress</th>
-                            <th>Status</th>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Company</th>
+                                <th>Progress</th>
+                                <th>Status</th>
+                                <th>Issues</th>
+                            </tr>
                         </thead>
-                    <tbody>
-                        <?php foreach($projectProgress as $project): ?>
-                         <tr>
-                            <td><?= $project['project_name'] ?></td>
-                            <td><?= $project['company_name'] ?? '-' ?></td>
-                            <td>
-                                <?php 
-                                $total = $project['total_issues'];
-                                $completed = $project['completed_issues'];
-                                $percentage = $total > 0 ? round(($completed / $total) * 100) : 0;
-                                ?>
-                                <div class="d-flex align-items-center">
-                                    <div class="progress-bar flex-grow-1 me-2" style="width: 100px;">
-                                        <div class="progress-fill" style="width: <?= $percentage ?>%"></div>
+                        <tbody>
+                            <?php foreach($projectProgress as $project): ?>
+                            <tr>
+                                <td><strong><?= esc($project['project_name']) ?></strong></td>
+                                <td><?= esc($project['company_name'] ?? '-') ?></td>
+                                <td style="min-width: 150px;">
+                                    <?php 
+                                    $total = $project['total_issues'] ?? 0;
+                                    $completed = ($project['completed_issues'] ?? 0) + ($project['closed_issues'] ?? 0);
+                                    $percentage = $total > 0 ? round(($completed / $total) * 100) : 0;
+                                    ?>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress-bar flex-grow-1 me-2" style="width: 100px;">
+                                            <div class="progress-fill" style="width: <?= $percentage ?>%"></div>
+                                        </div>
+                                        <span class="fw-bold"><?= $percentage ?>%</span>
                                     </div>
-                                    <span><?= $percentage ?>%</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge <?= $project['status'] == 'Done' ? 'badge-success' : ($project['status'] == 'In Progress' ? 'badge-warning' : 'badge-danger') ?>">
-                                    <?= $project['status'] ?? 'Unknown' ?>
-                                </span>
-                            </td>
-                         </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                                </td>
+                                <td>
+                                    <span class="badge <?= $project['status'] == 'completed' || $project['status'] == 'Done' ? 'badge-success' : ($project['status'] == 'in_progress' || $project['status'] == 'In Progress' ? 'badge-warning' : 'badge-danger') ?>">
+                                        <?= esc($project['status'] ?? 'Unknown') ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info"><?= $completed ?>/<?= $total ?></span>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php endif; ?>
         </div>
     </div>
 
 </main>
+
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Memuat data monitoring...</p>
+    </div>
+</div>
+
+<script>
+// Loading Overlay
+function showLoading(message = 'Memuat data monitoring...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Refresh data
+document.getElementById('btnRefresh')?.addEventListener('click', function(e) {
+    showLoading('Memperbarui data monitoring...');
+    setTimeout(() => {
+        window.location.reload();
+    }, 500);
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto-refresh setiap 30 detik (opsional)
+// setTimeout(function() {
+//     location.reload();
+// }, 30000);
+</script>
 
 <?= $this->endSection() ?>

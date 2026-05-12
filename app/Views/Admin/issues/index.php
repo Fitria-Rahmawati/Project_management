@@ -1,6 +1,47 @@
 <?= $this->extend('layout/app') ?>
 <?= $this->section('content') ?>
 
+<style>
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #36b9cc;
+        font-weight: 500;
+    }
+    
+    /* Tombol loading */
+    .btn-loading {
+        opacity: 0.7;
+        cursor: wait;
+        pointer-events: none;
+    }
+    
+    /* Animasi fade out alert */
+    .alert {
+        transition: opacity 0.5s ease;
+    }
+</style>
+
 <div class="card shadow">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
@@ -8,10 +49,10 @@
             <?= $title ?? 'Manajemen Issues' ?>
         </h5>
         <div>
-            <button class="btn btn-success btn-sm me-2" onclick="exportIssues()">
+            <button class="btn btn-success btn-sm me-2" onclick="exportIssues()" id="btnExport">
                 <i class="fas fa-file-export me-2"></i>Export
             </button>
-            <a href="/admin/issues/create" class="btn btn-primary btn-sm">
+            <a href="/admin/issues/create" class="btn btn-primary btn-sm" id="btnCreate">
                 <i class="fas fa-plus me-2"></i>Buat Issue Baru
             </a>
         </div>
@@ -22,6 +63,14 @@
             <div class="alert alert-success alert-dismissible fade show">
                 <i class="fas fa-check-circle me-2"></i>
                 <?= session()->getFlashdata('success') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if(session()->getFlashdata('error')): ?>
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <?= session()->getFlashdata('error') ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
@@ -37,7 +86,9 @@
                                 <select class="form-select" id="filterProject">
                                     <option value="">Semua Project</option>
                                     <?php foreach($projects as $proj): ?>
-                                        <option value="<?= $proj['id'] ?>"><?= $proj['project_name'] ?></option>
+                                        <option value="<?= $proj['id'] ?>" <?= ($filters['project_id'] ?? '') == $proj['id'] ? 'selected' : '' ?>>
+                                            <?= $proj['project_name'] ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -45,51 +96,53 @@
                                 <label class="form-label">Type</label>
                                 <select class="form-select" id="filterType">
                                     <option value="">Semua Type</option>
-                                    <option value="task">Task</option>
-                                    <option value="bug">Bug</option>
-                                    <option value="story">Story</option>
-                                    <option value="epic">Epic</option>
+                                    <option value="task" <?= ($filters['type'] ?? '') == 'task' ? 'selected' : '' ?>>Task</option>
+                                    <option value="bug" <?= ($filters['type'] ?? '') == 'bug' ? 'selected' : '' ?>>Bug</option>
+                                    <option value="story" <?= ($filters['type'] ?? '') == 'story' ? 'selected' : '' ?>>Story</option>
+                                    <option value="epic" <?= ($filters['type'] ?? '') == 'epic' ? 'selected' : '' ?>>Epic</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Status</label>
                                 <select class="form-select" id="filterStatus">
                                     <option value="">Semua Status</option>
-                                    <option value="To Do">To Do</option>
-                                    <option value="In Progress">In Progress</option>
-                                    <option value="In Review">In Review</option>
-                                    <option value="Done">Done</option>
-                                    <option value="Closed">Closed</option>
+                                    <option value="To Do" <?= ($filters['status'] ?? '') == 'To Do' ? 'selected' : '' ?>>To Do</option>
+                                    <option value="In Progress" <?= ($filters['status'] ?? '') == 'In Progress' ? 'selected' : '' ?>>In Progress</option>
+                                    <option value="In Review" <?= ($filters['status'] ?? '') == 'In Review' ? 'selected' : '' ?>>In Review</option>
+                                    <option value="Done" <?= ($filters['status'] ?? '') == 'Done' ? 'selected' : '' ?>>Done</option>
+                                    <option value="Closed" <?= ($filters['status'] ?? '') == 'Closed' ? 'selected' : '' ?>>Closed</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Priority</label>
                                 <select class="form-select" id="filterPriority">
                                     <option value="">Semua Priority</option>
-                                    <option value="Highest">Highest</option>
-                                    <option value="High">High</option>
-                                    <option value="Medium">Medium</option>
-                                    <option value="Low">Low</option>
-                                    <option value="Lowest">Lowest</option>
+                                    <option value="Highest" <?= ($filters['priority'] ?? '') == 'Highest' ? 'selected' : '' ?>>Highest</option>
+                                    <option value="High" <?= ($filters['priority'] ?? '') == 'High' ? 'selected' : '' ?>>High</option>
+                                    <option value="Medium" <?= ($filters['priority'] ?? '') == 'Medium' ? 'selected' : '' ?>>Medium</option>
+                                    <option value="Low" <?= ($filters['priority'] ?? '') == 'Low' ? 'selected' : '' ?>>Low</option>
+                                    <option value="Lowest" <?= ($filters['priority'] ?? '') == 'Lowest' ? 'selected' : '' ?>>Lowest</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Assignee</label>
                                 <select class="form-select" id="filterAssignee">
                                     <option value="">Semua Assignee</option>
-                                    <option value="unassigned">Unassigned</option>
+                                    <option value="unassigned" <?= ($filters['assignee'] ?? '') == 'unassigned' ? 'selected' : '' ?>>Unassigned</option>
                                     <?php foreach($users as $user): ?>
-                                        <option value="<?= $user['id'] ?>"><?= $user['username'] ?></option>
+                                        <option value="<?= $user['id'] ?>" <?= ($filters['assignee'] ?? '') == $user['id'] ? 'selected' : '' ?>>
+                                            <?= $user['username'] ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
                         <div class="row mt-3">
                             <div class="col-md-12">
-                                <button class="btn btn-primary btn-sm" onclick="applyFilters()">
+                                <button class="btn btn-primary btn-sm" onclick="applyFilters()" id="btnApplyFilter">
                                     <i class="fas fa-filter me-2"></i>Apply Filter
                                 </button>
-                                <button class="btn btn-secondary btn-sm" onclick="resetFilters()">
+                                <button class="btn btn-secondary btn-sm" onclick="resetFilters()" id="btnResetFilter">
                                     <i class="fas fa-undo me-2"></i>Reset
                                 </button>
                             </div>
@@ -190,14 +243,14 @@
                             <td colspan="10" class="text-center py-5">
                                 <i class="fas fa-exclamation-circle fa-4x text-muted mb-3"></i>
                                 <p class="text-muted">Belum ada issue</p>
-                                <a href="/admin/issues/create" class="btn btn-primary btn-sm">
+                                <a href="/admin/issues/create" class="btn btn-primary btn-sm" id="btnCreateFirst">
                                     <i class="fas fa-plus me-2"></i>Buat Issue Pertama
                                 </a>
                             </td>
                         </tr>
                     <?php else: ?>
                         <?php foreach($issues as $issue): ?>
-                            <tr class="issue-row" data-id="<?= $issue['id'] ?>" style="cursor: pointer;">
+                            <tr class="issue-row" data-id="<?= $issue['id'] ?>">
                                 <td onclick="showDetail(<?= $issue['id'] ?>)">
                                     <span class="badge bg-secondary">#<?= $issue['id'] ?></span>
                                 </td>
@@ -228,12 +281,12 @@
                                     <?= ucfirst($issue['issue_type']) ?>
                                 </td>
                                 <td onclick="showDetail(<?= $issue['id'] ?>)">
-                                    <strong><?= $issue['title'] ?></strong>
+                                    <strong><?= esc($issue['title']) ?></strong>
                                     <?php if($issue['parent_issue_id']): ?>
                                         <br><small class="text-muted">Sub-task of #<?= $issue['parent_issue_id'] ?></small>
                                     <?php endif; ?>
                                 </td>
-                                <td onclick="showDetail(<?= $issue['id'] ?>)"><?= $issue['project_name'] ?></td>
+                                <td onclick="showDetail(<?= $issue['id'] ?>)"><?= esc($issue['project_name']) ?></td>
                                 <td onclick="showDetail(<?= $issue['id'] ?>)">
                                     <?php 
                                     $statusClass = '';
@@ -291,7 +344,7 @@
                                                  style="width: 25px; height: 25px; font-size: 12px;">
                                                 <?= strtoupper(substr($issue['assignee_name'], 0, 1)) ?>
                                             </div>
-                                            <?= $issue['assignee_name'] ?>
+                                            <?= esc($issue['assignee_name']) ?>
                                         </div>
                                     <?php else: ?>
                                         <span class="text-muted">Unassigned</span>
@@ -303,7 +356,7 @@
                                              style="width: 25px; height: 25px; font-size: 12px;">
                                             <?= strtoupper(substr($issue['reporter_name'], 0, 1)) ?>
                                         </div>
-                                        <?= $issue['reporter_name'] ?>
+                                        <?= esc($issue['reporter_name']) ?>
                                     </div>
                                 </td>
                                 <td onclick="showDetail(<?= $issue['id'] ?>)">
@@ -324,15 +377,15 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="/admin/issues/<?= $issue['id'] ?>" class="btn btn-info btn-sm" title="Detail">
+                                        <a href="/admin/issues/<?= $issue['id'] ?>" class="btn btn-info btn-sm" title="Detail" data-detail-link>
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="/admin/issues/edit/<?= $issue['id'] ?>" class="btn btn-warning btn-sm" title="Edit">
+                                        <a href="/admin/issues/edit/<?= $issue['id'] ?>" class="btn btn-warning btn-sm" title="Edit" data-edit-link>
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="/admin/issues/delete/<?= $issue['id'] ?>" 
+                                        <a href="javascript:void(0)" 
                                            class="btn btn-danger btn-sm" 
-                                           onclick="return confirm('Yakin ingin menghapus issue ini?')"
+                                           onclick="confirmDelete(<?= $issue['id'] ?>, '<?= addslashes($issue['title']) ?>')"
                                            title="Hapus">
                                             <i class="fas fa-trash"></i>
                                         </a>
@@ -343,7 +396,7 @@
                     <?php endif; ?>
                 </tbody>
             </table>
-                </div>
+        </div>
 
         <!-- Pagination -->
         <?php if(isset($pager)): ?>
@@ -354,12 +407,43 @@
     </div>
 </div>
 
-<!-- JavaScript -->
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Memproses...</p>
+    </div>
+</div>
+
 <script>
-function showDetail(id) {
-    window.location.href = '/admin/issues/' + id;
+// Loading Overlay
+function showLoading(message = 'Memproses...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
 }
 
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Show detail
+function showDetail(id) {
+    showLoading('Memuat detail issue...');
+    setTimeout(() => {
+        window.location.href = '/admin/issues/' + id;
+    }, 200);
+}
+
+// Apply filters
 function applyFilters() {
     const project = document.getElementById('filterProject').value;
     const type = document.getElementById('filterType').value;
@@ -367,18 +451,77 @@ function applyFilters() {
     const priority = document.getElementById('filterPriority').value;
     const assignee = document.getElementById('filterAssignee').value;
     
-    window.location.href = `/admin/issues?project=${project}&type=${type}&status=${status}&priority=${priority}&assignee=${assignee}`;
+    showLoading('Menerapkan filter...');
+    setTimeout(() => {
+        window.location.href = `/admin/issues?project=${project}&type=${type}&status=${status}&priority=${priority}&assignee=${assignee}`;
+    }, 200);
 }
 
+// Reset filters
 function resetFilters() {
-    window.location.href = '/admin/issues';
+    showLoading('Merreset filter...');
+    setTimeout(() => {
+        window.location.href = '/admin/issues';
+    }, 200);
 }
 
+// Export issues
 function exportIssues() {
-    window.location.href = '/admin/issues/export';
+    showLoading('Menyiapkan file export...');
+    setTimeout(() => {
+        window.location.href = '/admin/issues/export';
+        setTimeout(() => {
+            hideLoading();
+        }, 1000);
+    }, 200);
 }
 
-// Auto-hide flash messages
+// Confirm delete with SweetAlert-style
+function confirmDelete(id, title) {
+    if (confirm(`⚠️ PERINGATAN!\n\nYakin ingin menghapus issue "${title}"?\n\nData yang dihapus tidak dapat dikembalikan!\n\nKlik OK untuk menghapus.`)) {
+        showLoading('Menghapus issue...');
+        setTimeout(() => {
+            window.location.href = '/admin/issues/delete/' + id;
+        }, 200);
+    }
+}
+
+// Loading untuk tombol create
+document.getElementById('btnCreate')?.addEventListener('click', function(e) {
+    showLoading('Membuka form create issue...');
+});
+document.getElementById('btnCreateFirst')?.addEventListener('click', function(e) {
+    showLoading('Membuka form create issue...');
+});
+
+// Loading untuk tombol edit
+document.querySelectorAll('[data-edit-link]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        showLoading('Membuka form edit issue...');
+    });
+});
+
+// Loading untuk tombol detail
+document.querySelectorAll('[data-detail-link]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        showLoading('Memuat detail issue...');
+    });
+});
+
+// Loading untuk tombol filter
+document.getElementById('btnApplyFilter')?.addEventListener('click', function(e) {
+    showLoading('Menerapkan filter...');
+});
+document.getElementById('btnResetFilter')?.addEventListener('click', function(e) {
+    showLoading('Merreset filter...');
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto close alert setelah 5 detik
 setTimeout(function() {
     let alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {

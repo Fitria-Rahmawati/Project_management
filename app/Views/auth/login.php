@@ -1,15 +1,27 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Project Management System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
+        /* ==================== VARIABLES ==================== */
+        :root {
+            --primary: #4e73df;
+            --primary-dark: #2e59d9;
+            --primary-light: #e8f0fe;
+            --secondary: #764ba2;
+            --success: #1cc88a;
+            --danger: #e74a3b;
+            --dark: #5a5c69;
+            --gray: #858796;
+            --border: #e3e6f0;
+            --bg-light: #f8f9fc;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -17,72 +29,104 @@
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
 
+        /* Background decoration */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* ==================== LOGIN CONTAINER ==================== */
         .login-container {
             background: white;
-            max-width: 420px;
+            max-width: 460px;
             width: 100%;
-            padding: 40px 35px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            animation: slideUp 0.5s ease;
+            padding: 45px 40px;
+            border-radius: 28px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            position: relative;
+            z-index: 1;
         }
 
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(40px);
             }
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
+
+        /* ==================== HEADER ==================== */
         .login-header {
             text-align: center;
             margin-bottom: 35px;
         }
 
-        .login-header i {
-            font-size: 65px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+        .logo-wrapper {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary-light), #f0e6ff);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .logo-wrapper i {
+            font-size: 38px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 15px;
         }
 
         .login-header h2 {
             font-size: 28px;
-            font-weight: 600;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .login-header p {
-            color: #888;
+            color: var(--gray);
             font-size: 14px;
-            font-weight: 300;
+            font-weight: 400;
         }
+
+        /* ==================== ALERT ==================== */
         .alert {
-            padding: 15px 20px;
-            border-radius: 12px;
+            padding: 14px 18px;
+            border-radius: 14px;
             margin-bottom: 25px;
-            font-size: 14px;
+            font-size: 13px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             animation: fadeIn 0.3s ease;
         }
 
@@ -96,27 +140,35 @@
         }
 
         .alert-error {
-            background: #fee;
-            color: #c33;
-            border-left: 4px solid #c33;
+            background: #fff5f5;
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
         }
 
         .alert-success {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border-left: 4px solid #2e7d32;
+            background: #f0fff4;
+            color: var(--success);
+            border-left: 4px solid var(--success);
         }
 
+        /* ==================== FORM ==================== */
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 24px;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #555;
-            font-size: 14px;
-            font-weight: 500;
+            color: var(--dark);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .form-group label i {
+            margin-right: 6px;
+            color: var(--primary);
+            font-size: 12px;
         }
 
         .input-group {
@@ -125,88 +177,100 @@
 
         .input-group i {
             position: absolute;
-            left: 15px;
+            left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            color: #667eea;
+            color: var(--primary);
             font-size: 18px;
-            transition: color 0.3s;
+            transition: all 0.3s;
+            opacity: 0.6;
         }
 
         .input-group input {
             width: 100%;
-            padding: 14px 15px 14px 48px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-family: 'Poppins', sans-serif;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
             font-size: 14px;
+            font-weight: 500;
             transition: all 0.3s;
-            background: #fafafa;
+            background: var(--bg-light);
         }
 
         .input-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--primary);
             background: white;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 4px rgba(78, 115, 223, 0.1);
+        }
+
+        .input-group input:focus + i {
+            opacity: 1;
         }
 
         .input-group input:hover {
-            border-color: #bbb;
+            border-color: #cbd5e1;
             background: white;
         }
 
         .input-group input::placeholder {
-            color: #aaa;
-            font-size: 13px;
+            color: #cbd5e1;
+            font-weight: 400;
         }
+
+        /* ==================== FORM OPTIONS ==================== */
         .form-options {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 28px;
         }
 
         .remember-me {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .remember-me input[type="checkbox"] {
             width: 18px;
             height: 18px;
             cursor: pointer;
-            accent-color: #667eea;
+            accent-color: var(--primary);
+            border-radius: 4px;
         }
 
         .remember-me label {
-            color: #666;
-            font-size: 14px;
+            color: var(--gray);
+            font-size: 13px;
             cursor: pointer;
+            font-weight: 500;
         }
 
         .forgot-password {
-            color: #667eea;
-            font-size: 14px;
+            color: var(--primary);
+            font-size: 13px;
             text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
+            font-weight: 600;
+            transition: all 0.3s;
         }
 
         .forgot-password:hover {
-            color: #764ba2;
+            color: var(--secondary);
             text-decoration: underline;
         }
+
+        /* ==================== BUTTON ==================== */
         .btn-login {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             color: white;
-            font-family: 'Poppins', sans-serif;
-            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
@@ -214,7 +278,7 @@
             justify-content: center;
             gap: 10px;
             transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         .btn-login:hover {
@@ -222,45 +286,77 @@
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-login i {
-            font-size: 18px;
-        }
-        .login-footer {
-            text-align: center;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+        .btn-login:active {
+            transform: translateY(0);
         }
 
-        .login-footer p {
-            color: #888;
-            font-size: 14px;
+        /* ==================== LOADING STATE ==================== */
+        .btn-login.loading {
+            opacity: 0.8;
+            cursor: wait;
         }
 
-        .login-footer a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            margin-left: 5px;
-            transition: color 0.3s;
+        .btn-login.loading .btn-text {
+            display: none;
         }
 
-        .login-footer a:hover {
-            color: #764ba2;
-            text-decoration: underline;
+        .btn-login.loading .loading-spinner {
+            display: inline-block;
         }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ==================== CAPTCHA ==================== */
         .captcha-wrapper {
             margin-bottom: 20px;
             display: flex;
             justify-content: center;
+            transform: scale(0.95);
         }
+
+        /* ==================== FOOTER ==================== */
+        .login-footer {
+            text-align: center;
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .login-footer p {
+            color: var(--gray);
+            font-size: 13px;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
         @media (max-width: 480px) {
             .login-container {
-                padding: 30px 20px;
+                padding: 35px 25px;
+                border-radius: 24px;
             }
 
             .login-header h2 {
                 font-size: 24px;
+            }
+
+            .logo-wrapper {
+                width: 60px;
+                height: 60px;
+            }
+
+            .logo-wrapper i {
+                font-size: 30px;
             }
 
             .form-options {
@@ -268,49 +364,68 @@
                 gap: 15px;
                 align-items: flex-start;
             }
+
+            .captcha-wrapper {
+                transform: scale(0.85);
+            }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
+        <!-- Header -->
         <div class="login-header">
-            <i class="fas fa-tasks"></i>
+            <div class="logo-wrapper">
+                <i class="fas fa-chart-line"></i>
+            </div>
             <h2>Project System</h2>
-            <p>Silakan login untuk mengakses dashboard</p>
+            <p>Login untuk mengakses dashboard</p>
         </div>
+
+        <!-- Flash Messages -->
         <?php if(session()->getFlashdata('error')): ?>
             <div class="alert alert-error">
                 <i class="fas fa-exclamation-circle"></i>
-                <?= session()->getFlashdata('error') ?>
+                <span><?= session()->getFlashdata('error') ?></span>
             </div>
         <?php endif; ?>
 
         <?php if(session()->getFlashdata('success')): ?>
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
-                <?= session()->getFlashdata('success') ?>
+                <span><?= session()->getFlashdata('success') ?></span>
             </div>
         <?php endif; ?>
 
         <?php if(session()->getFlashdata('captcha_error')): ?>
             <div class="alert alert-error">
                 <i class="fas fa-exclamation-circle"></i>
-                <?= session()->getFlashdata('captcha_error') ?>
+                <span><?= session()->getFlashdata('captcha_error') ?></span>
             </div>
         <?php endif; ?>
 
-        <form action="<?= base_url('login/process') ?>" method="post">
+        <?php if(session()->getFlashdata('contract_warning')): ?>
+            <div class="alert alert-error" style="background: #fff3e0; border-left-color: #f6c23e; color: #e65100;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span><?= session()->getFlashdata('contract_warning') ?></span>
+            </div>
+        <?php endif; ?>
+
+        <!-- Login Form -->
+        <form action="<?= base_url('login/process') ?>" method="post" id="loginForm">
             <?= csrf_field() ?>
 
             <div class="form-group">
-                <label for="email">Email</label>
+                <label for="email">
+                    <i class="fas fa-envelope"></i> EMAIL / USERNAME
+                </label>
                 <div class="input-group">
                     <i class="fas fa-envelope"></i>
                     <input 
-                        type="email" 
+                        type="text" 
                         id="email"
                         name="email" 
-                        placeholder="Masukkan email" 
+                        placeholder="Masukkan email atau username" 
                         value="<?= old('email') ?>" 
                         required
                         autofocus
@@ -319,7 +434,9 @@
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password">
+                    <i class="fas fa-lock"></i> PASSWORD
+                </label>
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
                     <input 
@@ -346,19 +463,70 @@
                 </a>
             </div>
 
-            <button type="submit" class="btn-login">
-                <i class="fas fa-sign-in-alt"></i>
-                Login
+            <button type="submit" class="btn-login" id="btnLogin">
+                <span class="btn-text">Login</span>
+                <span class="loading-spinner"></span>
+                <i class="fas fa-arrow-right"></i>
             </button>
         </form>
+
+        <!-- Footer (tanpa link registrasi) -->
         <div class="login-footer">
             <p>
-                Belum punya akun?
-                <a href="<?= base_url('register') ?>">Daftar sekarang</a>
+                &copy; <?= date('Y') ?> Project Management System - PT Vitech Asia
+            </p>
+            <p style="font-size: 11px; margin-top: 8px;">
+                <i class="fas fa-shield-alt"></i> Sistem ini hanya untuk pengguna yang terdaftar
             </p>
         </div>
     </div>
+
     <script>
+        // Loading state on form submit
+        const loginForm = document.getElementById('loginForm');
+        const btnLogin = document.getElementById('btnLogin');
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                // Basic validation
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email.trim()) {
+                    e.preventDefault();
+                    showAlert('Email/Username wajib diisi!', 'error');
+                    return false;
+                }
+                
+                if (!password.trim()) {
+                    e.preventDefault();
+                    showAlert('Password wajib diisi!', 'error');
+                    return false;
+                }
+                
+                // Show loading state
+                btnLogin.classList.add('loading');
+                btnLogin.disabled = true;
+            });
+        }
+
+        // Custom alert function
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i><span>${message}</span>`;
+            
+            const container = document.querySelector('.login-container');
+            const header = document.querySelector('.login-header');
+            container.insertBefore(alertDiv, header.nextSibling);
+            
+            setTimeout(() => {
+                alertDiv.style.opacity = '0';
+                setTimeout(() => alertDiv.remove(), 500);
+            }, 4000);
+        }
+
+        // Auto-hide flash messages
         setTimeout(function() {
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {

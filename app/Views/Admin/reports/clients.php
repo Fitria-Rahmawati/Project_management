@@ -114,6 +114,40 @@
         font-size: 12px;
         color: #888;
     }
+    
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #667eea;
+        font-weight: 500;
+    }
+    
+    /* Button loading */
+    .btn-loading {
+        opacity: 0.7;
+        cursor: wait;
+        pointer-events: none;
+    }
 </style>
 
 <div class="container-fluid px-0">
@@ -124,18 +158,19 @@
                 <?= $title ?>
             </h5>
             <div>
-                <a href="<?= base_url('admin/reports/export/clients') ?>" class="btn btn-success btn-sm me-2">
+                <a href="<?= base_url('admin/reports/export/clients') ?>" class="btn btn-success btn-sm me-2" id="btnExportExcel">
                     <i class="fas fa-file-export me-2"></i>Export CSV
                 </a>
-                    <a href="<?= base_url('admin/reports/export-client') ?>" class="btn btn-sm btn-danger" target="_blank">
-    <i class="fas fa-file-pdf"></i> PDF
-</a>
-                <a href="<?= base_url('admin/reports') ?>" class="btn btn-secondary btn-sm">
+                <a href="<?= base_url('admin/reports/export-client') ?>" class="btn btn-danger btn-sm me-2" target="_blank" id="btnExportPDF">
+                    <i class="fas fa-file-pdf me-2"></i>PDF
+                </a>
+                <a href="<?= base_url('admin/clients') ?>" class="btn btn-secondary btn-sm" id="btnBack">
                     <i class="fas fa-arrow-left me-2"></i>Kembali
                 </a>
             </div>
         </div>
     </div>
+    
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="summary-card">
@@ -163,6 +198,7 @@
             </div>
         </div>
     </div>
+    
     <div class="row">
         <?php if(empty($clients)): ?>
             <div class="col-12">
@@ -179,7 +215,7 @@
                             <div class="client-avatar">
                                 <?= strtoupper(substr($client['company_name'], 0, 1)) ?>
                             </div>
-                            <div class="client-name"><?= $client['company_name'] ?></div>
+                            <div class="client-name"><?= esc($client['company_name']) ?></div>
                             <div class="client-type"><?= ucfirst($client['company_type'] ?? 'client') ?></div>
                         </div>
                         <div class="client-body">
@@ -187,21 +223,21 @@
                                 <div class="info-label">Contact Person</div>
                                 <div class="info-value">
                                     <i class="fas fa-user-tie me-2 text-primary"></i>
-                                    <?= $client['contact_person'] ?? '-' ?>
+                                    <?= esc($client['contact_person'] ?? '-') ?>
                                 </div>
                             </div>
                             <div class="info-item">
                                 <div class="info-label">Email</div>
                                 <div class="info-value">
                                     <i class="fas fa-envelope me-2 text-primary"></i>
-                                    <?= $client['email'] ?? '-' ?>
+                                    <?= esc($client['email'] ?? '-') ?>
                                 </div>
                             </div>
                             <div class="info-item">
                                 <div class="info-label">Telepon</div>
                                 <div class="info-value">
                                     <i class="fas fa-phone me-2 text-primary"></i>
-                                    <?= $client['phone'] ?? '-' ?>
+                                    <?= esc($client['phone'] ?? '-') ?>
                                 </div>
                             </div>
                             <div class="row mt-4 mb-3">
@@ -221,7 +257,7 @@
                                     <div class="stat-box">
                                         <div class="stat-number">
                                             <?php 
-                                            $completed = $client['completed_issues'] + $client['closed_issues'];
+                                            $completed = ($client['completed_issues'] ?? 0) + ($client['closed_issues'] ?? 0);
                                             echo $completed;
                                             ?>
                                         </div>
@@ -230,8 +266,8 @@
                                 </div>
                             </div>
                             <?php 
-                            $totalIssues = $client['total_issues'];
-                            $completedIssues = $client['completed_issues'] + $client['closed_issues'];
+                            $totalIssues = $client['total_issues'] ?? 0;
+                            $completedIssues = ($client['completed_issues'] ?? 0) + ($client['closed_issues'] ?? 0);
                             $completionRate = $totalIssues > 0 ? round(($completedIssues / $totalIssues) * 100, 2) : 0;
                             ?>
                             <div class="mb-3">
@@ -243,7 +279,7 @@
                                     <div class="progress-bar" style="width: <?= $completionRate ?>%"></div>
                                 </div>
                             </div>
-                            <a href="<?= base_url('admin/clients/' . $client['id']) ?>" class="btn btn-outline-primary btn-sm w-100 mt-2">
+                            <a href="<?= base_url('admin/clients/' . $client['id']) ?>" class="btn btn-outline-primary btn-sm w-100 mt-2" data-detail-link data-id="<?= $client['id'] ?>">
                                 <i class="fas fa-eye me-2"></i>Lihat Detail
                             </a>
                         </div>
@@ -252,6 +288,7 @@
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
+    
     <div class="card shadow mt-4">
         <div class="card-header">
             <h6 class="mb-0"><i class="fas fa-table me-2"></i>Detail Data Client</h6>
@@ -279,26 +316,28 @@
                             </tr>
                         <?php else: ?>
                             <?php foreach($clients as $index => $client): 
-                                $totalIssues = $client['total_issues'];
-                                $completedIssues = $client['completed_issues'] + $client['closed_issues'];
+                                $totalIssues = $client['total_issues'] ?? 0;
+                                $completedIssues = ($client['completed_issues'] ?? 0) + ($client['closed_issues'] ?? 0);
                                 $completionRate = $totalIssues > 0 ? round(($completedIssues / $totalIssues) * 100, 2) : 0;
                             ?>
                                 <tr>
-                                    <td><?= $index + 1 ?></td>
+                                    <td class="text-center"><?= $index + 1 ?></td>
                                     <td>
-                                        <strong><?= $client['company_name'] ?></strong>
-                                    </td>
-                                    <td><?= $client['contact_person'] ?? '-' ?></td>
-                                    <td><?= $client['email'] ?? '-' ?></td>
-                                    <td><?= $client['phone'] ?? '-' ?></td>
-                                    <td class="text-center"><?= $client['total_projects'] ?></td>
-                                    <td class="text-center"><?= $client['total_issues'] ?></td>
+                                        <strong><?= esc($client['company_name']) ?></strong>
+                                     </div>
+                                     </td>
+                                    <td><?= esc($client['contact_person'] ?? '-') ?></td>
+                                    <td><?= esc($client['email'] ?? '-') ?></td>
+                                    <td><?= esc($client['phone'] ?? '-') ?></td>
+                                    <td class="text-center"><?= $client['total_projects'] ?? 0 ?></td>
+                                    <td class="text-center"><?= $client['total_issues'] ?? 0 ?></td>
                                     <td class="text-center text-success"><?= $completedIssues ?></td>
                                     <td class="text-center">
                                         <span class="badge bg-<?= $completionRate >= 70 ? 'success' : ($completionRate >= 50 ? 'warning' : 'danger') ?>">
                                             <?= $completionRate ?>%
                                         </span>
-                                    </td>
+                                     </div>
+                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -309,7 +348,73 @@
     </div>
 </div>
 
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Memproses...</p>
+    </div>
+</div>
+
 <script>
+// Loading Overlay
+function showLoading(message = 'Memproses...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Loading untuk tombol export CSV
+document.getElementById('btnExportExcel')?.addEventListener('click', function(e) {
+    showLoading('Menyiapkan file Excel...');
+    setTimeout(() => {
+        window.location.href = this.getAttribute('href');
+        setTimeout(() => {
+            hideLoading();
+        }, 1000);
+    }, 200);
+});
+
+// Loading untuk tombol export PDF
+document.getElementById('btnExportPDF')?.addEventListener('click', function(e) {
+    showLoading('Menyiapkan file PDF...');
+    // PDF akan terbuka di tab baru, loading akan hilang setelah beberapa detik
+    setTimeout(() => {
+        hideLoading();
+    }, 2000);
+});
+
+// Loading untuk tombol kembali
+document.getElementById('btnBack')?.addEventListener('click', function(e) {
+    showLoading('Kembali ke halaman reports...');
+});
+
+// Loading untuk tombol lihat detail
+document.querySelectorAll('[data-detail-link]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        const clientName = this.closest('.client-card')?.querySelector('.client-name')?.innerText || 'Client';
+        showLoading(`Memuat detail ${clientName}...`);
+    });
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto-hide flash messages
 setTimeout(function() {
     let alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {

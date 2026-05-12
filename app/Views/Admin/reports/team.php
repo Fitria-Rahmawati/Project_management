@@ -84,6 +84,33 @@
         margin-bottom: 20px;
     }
     
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #28a745;
+        font-weight: 500;
+    }
+    
     @media print {
         .no-print, .filter-card, .export-buttons, .btn, nav, .sidebar, footer {
             display: none !important;
@@ -106,18 +133,15 @@
             gap: 15px;
             page-break-inside: avoid;
         }
-        
         .stat-box {
             border: 1px solid #ddd;
             box-shadow: none;
             page-break-inside: avoid;
         }
-        
         .report-table {
             width: 100%;
             border-collapse: collapse;
         }
-        
         .report-table th, .report-table td {
             border: 1px solid #000 !important;
         }
@@ -130,7 +154,6 @@
             background-color: #f0f0f0 !important;
             color: #333 !important;
         }
-    
         .card-footer {
             border-top: 1px solid #ddd;
             margin-top: 20px;
@@ -140,7 +163,6 @@
 </style>
 
 <div class="container-fluid px-0">
-  
     <div class="report-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div>
@@ -153,13 +175,13 @@
                 </div>
             </div>
             <div class="export-buttons no-print">
-                <a href="<?= base_url('admin/reports/export/team') ?>" class="btn btn-sm btn-success">
+                <a href="<?= base_url('admin/reports/export/team') ?>" class="btn btn-sm btn-success" id="btnExportExcel">
                     <i class="fas fa-file-excel me-2"></i>Export Excel
                 </a>
-                   <a href="<?= base_url('admin/reports/export-team') ?>" class="btn btn-sm btn-danger" target="_blank">
-    <i class="fas fa-file-pdf"></i> PDF
-</a>
-                <a href="<?= base_url('admin/reports') ?>" class="btn btn-sm btn-outline-secondary">
+                <a href="<?= base_url('admin/reports/export-team') ?>" class="btn btn-sm btn-danger" target="_blank" id="btnExportPDF">
+                    <i class="fas fa-file-pdf me-2"></i>PDF
+                </a>
+                <a href="<?= base_url('admin/teams') ?>" class="btn btn-sm btn-outline-secondary" id="btnBack">
                     <i class="fas fa-arrow-left me-2"></i>Kembali
                 </a>
             </div>
@@ -167,11 +189,11 @@
     </div>
 
     <div class="filter-card no-print">
-        <form method="get" action="<?= base_url('admin/reports/team') ?>">
+        <form method="get" action="<?= base_url('admin/reports/team') ?>" id="filterForm">
             <div class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label small text-muted">Periode</label>
-                    <select name="period" class="form-select form-select-sm">
+                    <select name="period" class="form-select form-select-sm" id="filterPeriod">
                         <option value="all" <?= ($period ?? 'all') == 'all' ? 'selected' : '' ?>>Semua Waktu</option>
                         <option value="this_month" <?= ($period ?? '') == 'this_month' ? 'selected' : '' ?>>Bulan Ini</option>
                         <option value="last_month" <?= ($period ?? '') == 'last_month' ? 'selected' : '' ?>>Bulan Lalu</option>
@@ -180,28 +202,28 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-muted">Departemen</label>
-                    <select name="department" class="form-select form-select-sm">
+                    <select name="department" class="form-select form-select-sm" id="filterDepartment">
                         <option value="">Semua Departemen</option>
                         <?php foreach($departments ?? [] as $dept): ?>
                             <option value="<?= $dept['id'] ?>" <?= ($filter_dept ?? '') == $dept['id'] ? 'selected' : '' ?>>
-                                <?= $dept['department_name'] ?>
+                                <?= esc($dept['department_name']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-muted">Posisi</label>
-                    <select name="position" class="form-select form-select-sm">
+                    <select name="position" class="form-select form-select-sm" id="filterPosition">
                         <option value="">Semua Posisi</option>
                         <?php foreach($positions ?? [] as $pos): ?>
                             <option value="<?= $pos['id'] ?>" <?= ($filter_pos ?? '') == $pos['id'] ? 'selected' : '' ?>>
-                                <?= $pos['position_name'] ?>
+                                <?= esc($pos['position_name']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <button type="submit" class="btn btn-primary btn-sm w-100" id="btnFilter">
                         <i class="fas fa-filter me-2"></i>Terapkan Filter
                     </button>
                 </div>
@@ -257,7 +279,8 @@
                                 <td colspan="9" class="text-center py-5 text-muted">
                                     <i class="fas fa-chart-line fa-3x mb-3 d-block"></i>
                                     Belum ada data kinerja tim
-                                </td>
+                                 </div>
+                                 </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach($staff as $i => $member): ?>
@@ -270,24 +293,32 @@
                                                 <?= strtoupper(substr($member['first_name'] ?? $member['username'], 0, 1)) ?>
                                             </div>
                                             <div>
-                                                <strong><?= $member['first_name'] ?? $member['username'] ?> <?= $member['last_name'] ?? '' ?></strong>
+                                                <strong><?= esc($member['first_name'] ?? $member['username']) ?> <?= esc($member['last_name'] ?? '') ?></strong>
                                                 <br>
-                                                <small class="text-muted"><?= $member['email'] ?></small>
+                                                <small class="text-muted"><?= esc($member['email']) ?></small>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td><?= $member['position_name'] ?? '-' ?></td>
-                                    <td><?= $member['department_name'] ?? '-' ?></td>
-                                    <td class="text-center"><?= $member['assigned_issues'] ?></td>
-                                    <td class="text-center text-success"><?= ($member['completed_issues'] ?? 0) + ($member['closed_issues'] ?? 0) ?></td>
-                                    <td class="text-center text-danger"><?= $member['overdue_issues'] ?? 0 ?></td>
+                                     </div>
+                                     </td>
+                                    <td><?= esc($member['position_name'] ?? '-') ?></div>
+                                     </td>
+                                    <td><?= esc($member['department_name'] ?? '-') ?></div>
+                                     </td>
+                                    <td class="text-center"><?= $member['assigned_issues'] ?? 0 ?></div>
+                                     </td>
+                                    <td class="text-center text-success"><?= ($member['completed_issues'] ?? 0) + ($member['closed_issues'] ?? 0) ?></div>
+                                     </td>
+                                    <td class="text-center text-danger"><?= $member['overdue_issues'] ?? 0 ?></div>
+                                     </td>
                                     <td class="text-center">
                                         <?php $rate = $member['completion_rate'] ?? 0; ?>
                                         <span class="badge <?= $rate >= 70 ? 'badge-completion-high' : ($rate >= 50 ? 'badge-completion-medium' : 'badge-completion-low') ?>">
                                             <?= $rate ?>%
                                         </span>
-                                    </td>
-                                    <td class="text-center"><?= $member['total_hours'] ?? 0 ?> jam</td>
+                                     </div>
+                                     </td>
+                                    <td class="text-center"><?= $member['total_hours'] ?? 0 ?> jam</div>
+                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -302,7 +333,66 @@
     </div>
 </div>
 
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Memproses...</p>
+    </div>
+</div>
+
 <script>
+// Loading Overlay
+function showLoading(message = 'Memproses...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Submit filter dengan loading
+document.getElementById('filterForm')?.addEventListener('submit', function(e) {
+    showLoading('Menerapkan filter...');
+});
+
+// Loading untuk tombol export Excel
+document.getElementById('btnExportExcel')?.addEventListener('click', function(e) {
+    showLoading('Menyiapkan file Excel...');
+    setTimeout(() => {
+        hideLoading();
+    }, 2000);
+});
+
+// Loading untuk tombol export PDF
+document.getElementById('btnExportPDF')?.addEventListener('click', function(e) {
+    showLoading('Menyiapkan file PDF...');
+    setTimeout(() => {
+        hideLoading();
+    }, 2000);
+});
+
+// Loading untuk tombol kembali
+document.getElementById('btnBack')?.addEventListener('click', function(e) {
+    showLoading('Kembali ke halaman reports...');
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto-hide flash messages
 setTimeout(function() {
     let alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {

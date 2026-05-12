@@ -110,7 +110,7 @@ class Employees extends BaseController
             'position_id' => $this->request->getPost('position_id'),
             'department_id' => $this->request->getPost('department_id'),
             'hire_date' => $this->request->getPost('hire_date'),
-            'employment_status' => $this->request->getPost('status'),
+            'status' => $this->request->getPost('status'),
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
         ]);
@@ -128,7 +128,7 @@ class Employees extends BaseController
             return redirect()->back()->with('error', 'Gagal menyimpan data karyawan');
         }
 
-        return redirect()->to('/employees')->with('success', 'Karyawan berhasil ditambahkan');
+        return redirect()->to('admin/employees')->with('success', 'Karyawan berhasil ditambahkan');
     }
 
     // 🔹 Form edit employee
@@ -169,7 +169,7 @@ class Employees extends BaseController
             'position_id' => 'required',
             'department_id' => 'required',
             'hire_date' => 'required|valid_date',
-            'employment_status' => 'required|in_list[permanent,contract,intern,freelance]',
+            'status' => 'required|in_list[permanent,contract,intern,freelance]',
             'is_active' => 'required|in_list[0,1]'
         ];
 
@@ -222,7 +222,7 @@ class Employees extends BaseController
             'position_id' => $this->request->getPost('position_id'),
             'department_id' => $this->request->getPost('department_id'),
             'hire_date' => $this->request->getPost('hire_date'),
-            'employment_status' => $this->request->getPost('status'),
+            'status' => $this->request->getPost('status'),
             'updated_at' => date('Y-m-d H:i:s')
         ]);
 
@@ -235,15 +235,14 @@ class Employees extends BaseController
 
         $this->db->transComplete();
 
-        return redirect()->to('/employees')->with('success', 'Karyawan berhasil diupdate');
+        return redirect()->to('admin/employees')->with('success', 'Karyawan berhasil diupdate');
     }
 
-    // 🔹 Hapus employee (soft delete - nonaktifkan)
     public function delete($id)
     {
         $employee = $this->employee->find($id);
         if (!$employee) {
-            return redirect()->to('/employees')->with('error', 'Karyawan tidak ditemukan');
+            return redirect()->to('admin/employees')->with('error', 'Karyawan tidak ditemukan');
         }
 
         // Cek apakah ada tugas aktif
@@ -253,7 +252,7 @@ class Employees extends BaseController
             ->countAllResults();
 
         if ($activeTasks > 0) {
-            return redirect()->to('/employees')->with('error', 'Karyawan masih memiliki ' . $activeTasks . ' tugas aktif. Tidak bisa dihapus.');
+            return redirect()->to('admin/employees')->with('error', 'Karyawan masih memiliki ' . $activeTasks . ' tugas aktif. Tidak bisa dihapus.');
         }
 
         // Soft delete: nonaktifkan user
@@ -269,7 +268,7 @@ class Employees extends BaseController
             'created_at' => date('Y-m-d H:i:s')
         ]);
 
-        return redirect()->to('/employees')->with('success', 'Karyawan berhasil dinonaktifkan');
+        return redirect()->to('admin/employees')->with('success', 'Karyawan berhasil dinonaktifkan');
     }
 
     // 🔹 Detail karyawan
@@ -327,7 +326,7 @@ public function show($id)
     {
         $employee = $this->employee->find($id);
         if (!$employee) {
-            return redirect()->to('/employees')->with('error', 'Karyawan tidak ditemukan');
+            return redirect()->to('admin/employees')->with('error', 'Karyawan tidak ditemukan');
         }
 
         $newPassword = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8);

@@ -118,6 +118,33 @@
     .progress-bar {
         background: linear-gradient(135deg, #667eea, #764ba2);
     }
+    
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #667eea;
+        font-weight: 500;
+    }
 </style>
 
 <div class="container-fluid px-0">
@@ -128,20 +155,21 @@
                 <?= $title ?>
             </h5>
             <div>
-                <a href="/admin/projects/edit/<?= $project['id'] ?>" class="btn btn-warning btn-sm me-2">
+                <a href="/admin/projects/edit/<?= $project['id'] ?>" class="btn btn-warning btn-sm me-2" id="btnEdit">
                     <i class="fas fa-edit me-2"></i>Edit
                 </a>
-                <a href="/admin/projects" class="btn btn-secondary btn-sm">
+                <a href="/admin/projects" class="btn btn-secondary btn-sm" id="btnBack">
                     <i class="fas fa-arrow-left me-2"></i>Kembali
                 </a>
             </div>
         </div>
     </div>
+    
     <div class="project-header">
         <div class="row align-items-center">
             <div class="col-md-8">
                 <div class="project-title">
-                    <?= $project['project_name'] ?>
+                    <?= esc($project['project_name']) ?>
                     <span class="project-type ms-3">
                         <i class="fas <?= $project['project_type'] == 'internal' ? 'fa-building' : 'fa-user-tie' ?> me-1"></i>
                         <?= ucfirst($project['project_type']) ?>
@@ -199,18 +227,20 @@
                 </div>
                 <div class="card-body">
                     <?php if($project['description']): ?>
-                        <p><?= nl2br($project['description']) ?></p>
+                      <?php 
+$description = is_array($project['description']) ? json_encode($project['description']) : ($project['description'] ?? '-');?>
                     <?php else: ?>
                         <p class="text-muted">Tidak ada deskripsi</p>
                     <?php endif; ?>
                 </div>
             </div>
+            
             <div class="detail-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
                         <i class="fas fa-users me-2 text-primary"></i>Team Members
                     </div>
-                    <button class="btn btn-primary btn-sm" onclick="openAddMemberModal()">
+                    <button class="btn btn-primary btn-sm" onclick="openAddMemberModal()" id="btnAddMember">
                         <i class="fas fa-plus me-2"></i>Tambah Member
                     </button>
                 </div>
@@ -241,13 +271,15 @@
                                                         <?= strtoupper(substr($member['first_name'] ?? $member['username'], 0, 1)) ?>
                                                     </div>
                                                     <div>
-                                                        <strong><?= $member['first_name'] ?? $member['username'] ?> <?= $member['last_name'] ?? '' ?></strong>
+                                                        <strong><?= esc($member['first_name'] ?? $member['username']) ?> <?= esc($member['last_name'] ?? '') ?></strong>
                                                         <br>
-                                                        <small class="text-muted"><?= $member['username'] ?></small>
+                                                        <small class="text-muted"><?= esc($member['username']) ?></small>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td><?= $member['email'] ?></td>
+                                             </div>
+                                             </td>
+                                            <td><?= esc($member['email']) ?></div>
+                                             </td>
                                             <td>
                                                 <?php 
                                                 $roleClass = '';
@@ -278,18 +310,21 @@
                                                     <i class="fas <?= $roleIcon ?> me-1"></i>
                                                     <?= $roleText ?>
                                                 </span>
-                                            </td>
+                                             </div>
+                                             </td>
                                             <td>
-                                                <?= $member['position_name'] ?? '-' ?>
+                                                <?= esc($member['position_name'] ?? '-') ?>
                                                 <?php if($member['department_name']): ?>
-                                                    <br><small class="text-muted"><?= $member['department_name'] ?></small>
+                                                    <br><small class="text-muted"><?= esc($member['department_name']) ?></small>
                                                 <?php endif; ?>
-                                            </td>
+                                             </div>
+                                             </td>
                                             <td>
-                                                <button class="btn btn-sm btn-danger" onclick="removeMember(<?= $member['id'] ?>)">
+                                                <button class="btn btn-sm btn-danger" onclick="removeMember(<?= $member['id'] ?>, '<?= addslashes($member['first_name'] ?? $member['username']) ?>')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                            </td>
+                                             </div>
+                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -298,12 +333,13 @@
                     <?php endif; ?>
                 </div>
             </div>
+            
             <div class="detail-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
                         <i class="fas fa-exclamation-circle me-2 text-primary"></i>Recent Issues
                     </div>
-                    <a href="/admin/issues?project=<?= $project['id'] ?>" class="btn btn-sm btn-outline-primary">
+                    <a href="/admin/issues?project=<?= $project['id'] ?>" class="btn btn-sm btn-outline-primary" id="btnAllIssues">
                         Lihat Semua
                     </a>
                 </div>
@@ -326,13 +362,13 @@
                     <?php else: ?>
                         <div class="list-group">
                             <?php foreach($recentIssues as $issue): ?>
-                                <a href="/admin/issues/<?= $issue['id'] ?>" class="list-group-item list-group-item-action">
+                                <a href="/admin/issues/<?= $issue['id'] ?>" class="list-group-item list-group-item-action" data-issue-link>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <strong>#<?= $issue['id'] ?> - <?= $issue['title'] ?></strong>
+                                            <strong>#<?= $issue['id'] ?> - <?= esc($issue['title']) ?></strong>
                                             <br>
                                             <small class="text-muted">
-                                                <i class="fas fa-user me-1"></i><?= $issue['reporter_name'] ?? 'Unknown' ?>
+                                                <i class="fas fa-user me-1"></i><?= esc($issue['reporter_name'] ?? 'Unknown') ?>
                                                 <i class="fas fa-calendar ms-2 me-1"></i><?= date('d/m/Y', strtotime($issue['created_at'])) ?>
                                             </small>
                                         </div>
@@ -356,6 +392,7 @@
                 </div>
             </div>
         </div>
+        
         <div class="col-md-4">
             <div class="detail-card">
                 <div class="card-header">
@@ -366,7 +403,7 @@
                         <div class="team-avatar mx-auto mb-3" style="width: 70px; height: 70px; font-size: 28px;">
                             <?= strtoupper(substr($project['company_name'] ?? 'I', 0, 1)) ?>
                         </div>
-                        <h5><?= $project['company_name'] ?? 'Internal' ?></h5>
+                        <h5><?= esc($project['company_name'] ?? 'Internal') ?></h5>
                         <span class="badge <?= ($project['company_type'] ?? '') == 'client' ? 'bg-success' : 'bg-secondary' ?>">
                             <?= ucfirst($project['company_type'] ?? 'internal') ?>
                         </span>
@@ -378,26 +415,27 @@
                             <div class="info-label">Contact Person</div>
                             <div class="info-value">
                                 <i class="fas fa-user-tie me-2 text-primary"></i>
-                                <?= $project['contact_person'] ?? '-' ?>
+                                <?= esc($project['contact_person'] ?? '-') ?>
                             </div>
                         </div>
                         <div class="info-item mb-3">
                             <div class="info-label">Company Email</div>
                             <div class="info-value">
                                 <i class="fas fa-envelope me-2 text-primary"></i>
-                                <?= $project['company_email'] ?? '-' ?>
+                                <?= esc($project['company_email'] ?? '-') ?>
                             </div>
                         </div>
                         <div class="info-item mb-3">
                             <div class="info-label">Company Phone</div>
                             <div class="info-value">
                                 <i class="fas fa-phone me-2 text-primary"></i>
-                                <?= $project['company_phone'] ?? '-' ?>
+                                <?= esc($project['company_phone'] ?? '-') ?>
                             </div>
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
+            
             <div class="detail-card">
                 <div class="card-header">
                     <i class="fas fa-user-tie me-2 text-primary"></i>Project Manager
@@ -412,9 +450,9 @@
                                 <?= strtoupper(substr($pmName, 0, 1)) ?>
                             </div>
                             <div>
-                                <h5 class="mb-1"><?= $pmName ?> <?= $project['manager_last_name'] ?? '' ?></h5>
+                                <h5 class="mb-1"><?= esc($pmName) ?> <?= esc($project['manager_last_name'] ?? '') ?></h5>
                                 <small class="text-muted d-block">
-                                    <i class="fas fa-envelope me-1"></i> <?= $project['manager_username'] ?? '' ?>
+                                    <i class="fas fa-envelope me-1"></i> <?= esc($project['manager_username'] ?? '') ?>
                                 </small>
                             </div>
                         </div>
@@ -423,6 +461,7 @@
                     <?php endif; ?>
                 </div>
             </div>
+            
             <div class="detail-card">
                 <div class="card-header">
                     <i class="fas fa-chart-pie me-2 text-primary"></i>Statistik
@@ -493,6 +532,7 @@
                     </div>
                 </div>
             </div>
+            
             <div class="detail-card">
                 <div class="card-header">
                     <i class="fas fa-calendar-alt me-2 text-primary"></i>Timeline
@@ -525,6 +565,8 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Tambah Member -->
 <div class="modal fade" id="addMemberModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -535,51 +577,155 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="/admin/projects/<?= $project['id'] ?>/add-member" method="post">
+            <form action="/admin/projects/<?= $project['id'] ?>/add-member" method="post" id="addMemberForm">
                 <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Pilih User</label>
-                        <select name="user_id" class="form-select" required>
+                        <label class="form-label">Pilih User <span class="text-danger">*</span></label>
+                        <select name="user_id" class="form-select" id="selectUser" required>
                             <option value="">-- Pilih User --</option>
                             <?php 
                             $userModel = new \App\Models\UserModel();
                             $users = $userModel->findAll();
                             foreach($users as $user): 
                             ?>
-                                <option value="<?= $user['id'] ?>"><?= $user['username'] ?> (<?= $user['email'] ?>)</option>
+                                <option value="<?= $user['id'] ?>"><?= esc($user['username']) ?> (<?= esc($user['email']) ?>)</option>
                             <?php endforeach; ?>
                         </select>
+                        <div class="invalid-feedback">User wajib dipilih</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Role dalam Project</label>
-                        <select name="role_in_project" class="form-select" required>
+                        <label class="form-label">Role dalam Project <span class="text-danger">*</span></label>
+                        <select name="role_in_project" class="form-select" id="selectRole" required>
                             <option value="">-- Pilih Role --</option>
                             <option value="staff">Staff</option>
                             <option value="project_manager">Project Manager</option>
                             <option value="client">Client</option>
                         </select>
+                        <div class="invalid-feedback">Role wajib dipilih</div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Tambah</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitMember">
+                        <i class="fas fa-save me-2"></i>
+                        <span class="btn-text">Tambah</span>
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Memproses...</p>
+    </div>
+</div>
+
 <script>
+// Loading Overlay
+function showLoading(message = 'Memproses...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Modal functions
 function openAddMemberModal() {
     new bootstrap.Modal(document.getElementById('addMemberModal')).show();
 }
 
-function removeMember(memberId) {
-    if(confirm('Yakin ingin menghapus member ini dari project?')) {
-        window.location.href = '/admin/projects/remove-member/<?= $project['id'] ?>/' + memberId;
+// Remove member with confirmation
+function removeMember(memberId, memberName) {
+    if (confirm(`⚠️ PERINGATAN!\n\nYakin ingin menghapus member "${memberName}" dari project ini?\n\nKlik OK untuk melanjutkan.`)) {
+        showLoading('Menghapus member dari project...');
+        setTimeout(() => {
+            window.location.href = '/admin/projects/remove-member/<?= $project['id'] ?>/' + memberId;
+        }, 200);
     }
 }
+
+// Validasi form tambah member
+document.getElementById('addMemberForm')?.addEventListener('submit', function(e) {
+    let isValid = true;
+    
+    const user = document.getElementById('selectUser');
+    if (!user.value) {
+        user.classList.add('is-invalid');
+        isValid = false;
+    } else {
+        user.classList.remove('is-invalid');
+    }
+    
+    const role = document.getElementById('selectRole');
+    if (!role.value) {
+        role.classList.add('is-invalid');
+        isValid = false;
+    } else {
+        role.classList.remove('is-invalid');
+    }
+    
+    if (!isValid) {
+        e.preventDefault();
+        return false;
+    }
+    
+    const btn = document.getElementById('btnSubmitMember');
+    btn.disabled = true;
+    btn.querySelector('.btn-text').textContent = 'Menyimpan...';
+    btn.querySelector('.spinner-border').classList.remove('d-none');
+    showLoading('Menambahkan member...');
+});
+
+// Loading untuk navigasi
+document.getElementById('btnEdit')?.addEventListener('click', function(e) {
+    showLoading('Membuka form edit project...');
+});
+document.getElementById('btnBack')?.addEventListener('click', function(e) {
+    showLoading('Kembali ke daftar project...');
+});
+document.getElementById('btnAllIssues')?.addEventListener('click', function(e) {
+    showLoading('Memuat daftar issues...');
+});
+document.querySelectorAll('[data-issue-link]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        showLoading('Memuat detail issue...');
+    });
+});
+document.getElementById('btnAddMember')?.addEventListener('click', function(e) {
+    // Reset form modal
+    document.getElementById('selectUser').value = '';
+    document.getElementById('selectRole').value = '';
+});
+
+// Remove invalid class on input
+document.getElementById('selectUser')?.addEventListener('change', function() {
+    this.classList.remove('is-invalid');
+});
+document.getElementById('selectRole')?.addEventListener('change', function() {
+    this.classList.remove('is-invalid');
+});
+
+// Sembunyikan loading saat halaman selesai
+window.addEventListener('load', function() {
+    hideLoading();
+});
 
 // Auto-hide flash messages
 setTimeout(function() {

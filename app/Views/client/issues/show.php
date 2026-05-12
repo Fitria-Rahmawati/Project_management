@@ -2,6 +2,45 @@
 <?= $this->section('content') ?>
 
 <style>
+    /* ==================== LOADING OVERLAY ==================== */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e3e6f0;
+        border-top-color: #e74a3b;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #e74a3b;
+        font-weight: 500;
+    }
+
     .detail-header {
         background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);
         padding: 25px;
@@ -15,6 +54,10 @@
         padding: 20px;
         margin-bottom: 20px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: transform 0.3s;
+    }
+    .info-card:hover {
+        transform: translateY(-3px);
     }
     .timeline-item {
         border-left: 2px solid #e0e0e0;
@@ -32,15 +75,49 @@
         border-radius: 50%;
         background: #e74a3b;
     }
+    .btn-back {
+        background: #6c757d;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        color: white;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-back:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        color: white;
+    }
+    .btn-pdf {
+        background: #dc3545;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        color: white;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-pdf:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        color: white;
+    }
 </style>
 
 <div class="container-fluid">
     <!-- Tombol Kembali dan Export PDF -->
     <div class="mb-3 d-flex justify-content-between align-items-center">
-        <a href="<?= base_url('client/issues') ?>" class="btn btn-outline-secondary btn-sm">
+        <a href="<?= base_url('client/issues') ?>" class="btn-back" id="btnBack">
             <i class="fas fa-arrow-left me-1"></i> Kembali
         </a>
-        <a href="<?= base_url('client/export-issue/' . $issue['id']) ?>" class="btn btn-danger btn-sm" target="_blank">
+        <a href="<?= base_url('client/export-issue/' . $issue['id']) ?>" class="btn-pdf" target="_blank" id="btnExport">
             <i class="fas fa-file-pdf me-1"></i> Export PDF
         </a>
     </div>
@@ -138,5 +215,58 @@
         </div>
     </div>
 </div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p id="loadingMessage">Memuat data...</p>
+    </div>
+</div>
+
+<script>
+// Loading Overlay functions
+const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingMessage = document.getElementById('loadingMessage');
+
+function showLoading(message = 'Memuat data...') {
+    if (loadingOverlay) {
+        if (loadingMessage) loadingMessage.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        loadingOverlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
+    }
+}
+
+// Loading untuk navigasi
+document.getElementById('btnBack')?.addEventListener('click', function(e) {
+    showLoading('Kembali ke daftar kendala...');
+});
+
+document.getElementById('btnExport')?.addEventListener('click', function(e) {
+    showLoading('Menyiapkan file PDF...');
+    setTimeout(() => {
+        hideLoading();
+    }, 2000);
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto close alerts
+setTimeout(function() {
+    let alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        let bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    });
+}, 5000);
+</script>
 
 <?= $this->endSection() ?>

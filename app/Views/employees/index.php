@@ -9,7 +9,9 @@
         text-align: center;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         margin-bottom: 20px;
+        transition: transform 0.3s;
     }
+    .stats-card:hover { transform: translateY(-3px); }
     .stats-card h2 { margin: 0; font-size: 28px; font-weight: bold; }
     .employee-avatar {
         width: 40px;
@@ -22,6 +24,41 @@
         justify-content: center;
         font-weight: bold;
     }
+    
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #36b9cc;
+        font-weight: 500;
+    }
+    .btn-loading {
+        opacity: 0.7;
+        cursor: wait;
+        pointer-events: none;
+    }
+    .btn-loading .spinner-border {
+        display: inline-block !important;
+    }
 </style>
 
 <div class="container-fluid">
@@ -30,7 +67,7 @@
             <i class="fas fa-users me-2 text-primary"></i>
             Daftar Karyawan
         </h1>
-        <a href="<?= base_url('admin/employees/create') ?>" class="btn btn-primary">
+        <a href="<?= base_url('admin/employees/create') ?>" class="btn btn-primary" id="btnTambah">
             <i class="fas fa-plus me-2"></i>Tambah Karyawan
         </a>
     </div>
@@ -112,16 +149,17 @@
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <a href="<?= base_url('admin/employees/show/' . $emp['id']) ?>" class="btn btn-sm btn-info" title="Detail">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="<?= base_url('admin/employees/edit/' . $emp['id']) ?>" class="btn btn-sm btn-warning" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="<?= base_url('admin/employees/delete/' . $emp['id']) ?>" class="btn btn-sm btn-danger" title="Nonaktifkan" onclick="return confirm('Yakin ingin menonaktifkan karyawan ini?')">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                     </div>
+                                        <div class="btn-group" role="group">
+                                            <a href="<?= base_url('admin/employees/show/' . $emp['id']) ?>" class="btn btn-sm btn-info" title="Detail">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="<?= base_url('admin/employees/edit/' . $emp['id']) ?>" class="btn btn-sm btn-warning" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger" title="Nonaktifkan" onclick="confirmDeactivate('<?= $emp['id'] ?>', '<?= addslashes($emp['first_name'] . ' ' . ($emp['last_name'] ?? '')) ?>')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -132,5 +170,69 @@
         </div>
     </div>
 </div>
+
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p><i class="fas fa-spinner fa-spin me-2"></i> Memproses...</p>
+    </div>
+</div>
+
+<script>
+
+function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+function confirmDeactivate(id, name) {
+    if (confirm(`⚠️ PERINGATAN!\n\nYakin ingin menonaktifkan karyawan "${name}"?\n\nKaryawan yang dinonaktifkan tidak akan bisa login dan tidak akan menerima tugas baru.\n\nTindakan ini dapat dibatalkan dengan mengaktifkan kembali melalui edit data.\n\nKlik OK untuk melanjutkan.`)) {
+       
+        showLoading();
+        window.location.href = '<?= base_url('admin/employees/delete/') ?>' + id;
+    }
+}
+
+
+document.getElementById('btnTambah')?.addEventListener('click', function(e) {
+    showLoading();
+});
+
+
+document.querySelectorAll('.btn-info, .btn-warning').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        showLoading();
+    });
+});
+
+
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+
+setTimeout(function() {
+    hideLoading();
+    let alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            let bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 5000);
+    });
+}, 1000);
+</script>
 
 <?= $this->endSection() ?>

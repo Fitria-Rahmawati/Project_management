@@ -9,12 +9,22 @@ class UserModel extends Model
     protected $primaryKey = 'id';
     protected $allowedFields = [
         'username', 'email', 'password', 
-        'role_id', 'company_id', 'is_active',
+        'role_id', 'company_id', 'is_active', 'is_verified',  // ← TAMBAHKAN is_verified
+        'last_login', 'last_login_device', 'last_ip',         // ← TAMBAHKAN juga ini opsional
         'created_at', 'updated_at'
     ];
     protected $useTimestamps = true;
 
-   
+    // Tambah method updateLastLogin jika diperlukan
+    public function updateLastLogin($userId, $device, $ip)
+    {
+        return $this->update($userId, [
+            'last_login' => date('Y-m-d H:i:s'),
+            'last_login_device' => $device,
+            'last_ip' => $ip
+        ]);
+    }
+
     public function role()
     {
         return $this->belongsTo('App\Models\RoleModel', 'role_id');
@@ -92,7 +102,7 @@ class UserModel extends Model
         return $builder->get()->getResultArray();
     }
 
-     public function getUsersWithRoleCompany($keyword = null, $companyType = null)
+    public function getUsersWithRoleCompany($keyword = null, $companyType = null)
     {
         $db = \Config\Database::connect();
         $builder = $db->table('users');
@@ -105,6 +115,7 @@ class UserModel extends Model
         ');
         $builder->join('roles', 'roles.id = users.role_id', 'left');
         $builder->join('companies', 'companies.id = users.company_id', 'left');
+        
         if ($keyword) {
             $builder->groupStart()
                 ->like('users.username', $keyword)
@@ -119,5 +130,4 @@ class UserModel extends Model
         
         return $builder->get()->getResultArray();
     }
-
 }

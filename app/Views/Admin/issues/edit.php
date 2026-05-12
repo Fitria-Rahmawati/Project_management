@@ -1,5 +1,53 @@
 <?= $this->extend('layout/app') ?>
 <?= $this->section('content') ?>
+<?php $issue = $issue ?? []; ?>
+
+<style>
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #f6c23e;
+        font-weight: 500;
+    }
+    
+    /* Validasi styling */
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+    .invalid-feedback {
+        display: block;
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    
+    /* Button loading */
+    .btn-loading {
+        opacity: 0.7;
+        cursor: wait;
+        pointer-events: none;
+    }
+</style>
 
 <div class="card shadow">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -8,10 +56,10 @@
             <?= $title ?>
         </h5>
         <div>
-            <a href="/admin/issues/<?= $issue['id'] ?>" class="btn btn-info btn-sm me-2">
+            <a href="/admin/issues/<?= $issue['id'] ?>" class="btn btn-info btn-sm me-2" id="btnDetail">
                 <i class="fas fa-eye me-2"></i>Detail
             </a>
-            <a href="/admin/issues" class="btn btn-secondary btn-sm">
+            <a href="/admin/issues" class="btn btn-secondary btn-sm" id="btnBack">
                 <i class="fas fa-arrow-left me-2"></i>Kembali
             </a>
         </div>
@@ -21,6 +69,18 @@
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-circle me-2"></i>
                 <?= session()->getFlashdata('error') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if(session()->getFlashdata('errors')): ?>
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <ul class="mb-0">
+                    <?php foreach(session()->getFlashdata('errors') as $error): ?>
+                        <li><?= $error ?></li>
+                    <?php endforeach; ?>
+                </ul>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
@@ -76,7 +136,7 @@
                             </tr>
                             <tr>
                                 <th>Title</th>
-                                <td>: <strong><?= $issue['title'] ?></strong></td>
+                                <td>: <strong id="previewTitle"><?= esc($issue['title']) ?></strong></td>
                             </tr>
                             <tr>
                                 <th>Status</th>
@@ -101,7 +161,7 @@
                                             break;
                                     }
                                     ?>
-                                    <span class="badge <?= $statusClass ?>"><?= $issue['status'] ?></span>
+                                    <span class="badge <?= $statusClass ?>" id="previewStatus"><?= $issue['status'] ?></span>
                                 </td>
                             </tr>
                         </table>
@@ -115,7 +175,8 @@
                 </div>
             </div>
         </div>
-        <form action="/admin/issues/update/<?= $issue['id'] ?>" method="post">
+        
+        <form action="/admin/issues/update/<?= $issue['id'] ?>" method="post" id="editIssueForm">
             <?= csrf_field() ?>
 
             <div class="row">
@@ -128,14 +189,12 @@
                             <div class="mb-3">
                                 <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
                                 <input type="text" 
-                                       class="form-control <?= (isset($validation) && $validation->hasError('title')) ? 'is-invalid' : '' ?>" 
+                                       class="form-control" 
                                        id="title" 
                                        name="title" 
-                                       value="<?= old('title', $issue['title']) ?>" 
+                                       value="<?= old('title', esc($issue['title'])) ?>" 
                                        required>
-                                <?php if(isset($validation) && $validation->hasError('title')): ?>
-                                    <div class="invalid-feedback"><?= $validation->getError('title') ?></div>
-                                <?php endif; ?>
+                                <div class="invalid-feedback">Judul issue wajib diisi</div>
                             </div>
 
                             <div class="mb-3">
@@ -143,7 +202,7 @@
                                 <textarea class="form-control" 
                                           id="description" 
                                           name="description" 
-                                          rows="6"><?= old('description', $issue['description']) ?></textarea>
+                                          rows="6"><?= old('description', esc($issue['description'])) ?></textarea>
                                 <small class="text-muted">Jelaskan issue secara detail</small>
                             </div>
                         </div>
@@ -158,10 +217,7 @@
                         <div class="card-body">
                             <div class="mb-3">
                                 <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                                <select class="form-select <?= (isset($validation) && $validation->hasError('status')) ? 'is-invalid' : '' ?>" 
-                                        id="status" 
-                                        name="status" 
-                                        required>
+                                <select class="form-select" id="status" name="status" required>
                                     <option value="">-- Pilih Status --</option>
                                     <option value="To Do" <?= old('status', $issue['status']) == 'To Do' ? 'selected' : '' ?>>To Do</option>
                                     <option value="In Progress" <?= old('status', $issue['status']) == 'In Progress' ? 'selected' : '' ?>>In Progress</option>
@@ -169,17 +225,12 @@
                                     <option value="Done" <?= old('status', $issue['status']) == 'Done' ? 'selected' : '' ?>>Done</option>
                                     <option value="Closed" <?= old('status', $issue['status']) == 'Closed' ? 'selected' : '' ?>>Closed</option>
                                 </select>
-                                <?php if(isset($validation) && $validation->hasError('status')): ?>
-                                    <div class="invalid-feedback"><?= $validation->getError('status') ?></div>
-                                <?php endif; ?>
+                                <div class="invalid-feedback">Status wajib dipilih</div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
-                                <select class="form-select <?= (isset($validation) && $validation->hasError('priority')) ? 'is-invalid' : '' ?>" 
-                                        id="priority" 
-                                        name="priority" 
-                                        required>
+                                <select class="form-select" id="priority" name="priority" required>
                                     <option value="">-- Pilih Priority --</option>
                                     <option value="Lowest" <?= old('priority', $issue['priority']) == 'Lowest' ? 'selected' : '' ?>>Lowest</option>
                                     <option value="Low" <?= old('priority', $issue['priority']) == 'Low' ? 'selected' : '' ?>>Low</option>
@@ -187,9 +238,7 @@
                                     <option value="High" <?= old('priority', $issue['priority']) == 'High' ? 'selected' : '' ?>>High</option>
                                     <option value="Highest" <?= old('priority', $issue['priority']) == 'Highest' ? 'selected' : '' ?>>Highest</option>
                                 </select>
-                                <?php if(isset($validation) && $validation->hasError('priority')): ?>
-                                    <div class="invalid-feedback"><?= $validation->getError('priority') ?></div>
-                                <?php endif; ?>
+                                <div class="invalid-feedback">Prioritas wajib dipilih</div>
                             </div>
                         </div>
                     </div>
@@ -207,7 +256,7 @@
                                         <?php if(in_array($user['role_name'] ?? '', ['admin', 'staff', 'superadmin'])): ?>
                                             <option value="<?= $user['id'] ?>" 
                                                 <?= old('assignee_id', $issue['assignee_id']) == $user['id'] ? 'selected' : '' ?>>
-                                                <?= $user['username'] ?> (<?= ucfirst($user['role_name'] ?? '') ?>)
+                                                <?= esc($user['username']) ?> (<?= ucfirst($user['role_name'] ?? '') ?>)
                                             </option>
                                         <?php endif; ?>
                                     <?php endforeach; ?>
@@ -241,6 +290,7 @@
                                        value="<?= old('estimated_hours', $issue['estimated_hours']) ?>"
                                        step="0.5"
                                        min="0.5">
+                                <div class="invalid-feedback">Estimasi jam minimal 0.5 jam</div>
                                 <small class="text-muted">Estimasi waktu pengerjaan (jam)</small>
                             </div>
 
@@ -270,7 +320,7 @@
                                     <?php foreach($parent_issues as $parent): ?>
                                         <option value="<?= $parent['id'] ?>" 
                                             <?= old('parent_issue_id', $issue['parent_issue_id']) == $parent['id'] ? 'selected' : '' ?>>
-                                            #<?= $parent['id'] ?> - <?= $parent['title'] ?> (<?= $parent['status'] ?>)
+                                            #<?= $parent['id'] ?> - <?= esc($parent['title']) ?> (<?= $parent['status'] ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -290,65 +340,166 @@
             </div>
 
             <div class="d-flex justify-content-end gap-2">
-                <a href="/admin/issues/<?= $issue['id'] ?>" class="btn btn-secondary">
+                <a href="/admin/issues/<?= $issue['id'] ?>" class="btn btn-secondary" id="btnCancel">
                     <i class="fas fa-times me-2"></i>Batal
                 </a>
-                <button type="submit" class="btn btn-warning">
-                    <i class="fas fa-save me-2"></i>Update Issue
+                <button type="submit" class="btn btn-warning" id="btnUpdate">
+                    <i class="fas fa-save me-2"></i>
+                    <span class="btn-text">Update Issue</span>
+                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- JavaScript -->
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Menyimpan perubahan...</p>
+    </div>
+</div>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// Loading Overlay
+function showLoading(message = 'Menyimpan perubahan...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
+}
 
-    const titleInput = document.getElementById('title');
-    const statusSelect = document.getElementById('status');
-    const prioritySelect = document.getElementById('priority');
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Validasi form
+function validateForm() {
+    let isValid = true;
     
-    function updatePreview() {
-        const previewTitle = document.querySelector('.card-title');
-        const previewStatus = document.querySelector('.badge.bg-secondary, .badge.bg-warning.text-dark, .badge.bg-info, .badge.bg-success, .badge.bg-dark');
-        const previewPriority = document.querySelector('.card-body .mb-3:nth-child(2)');
-
-        if(previewTitle) {
-            previewTitle.textContent = titleInput.value || 'Informasi Issue Saat Ini';
-        }
-        if(previewStatus) {
-            let statusClass = '';
-            switch(statusSelect.value) {
-                case 'To Do':
-                    statusClass = 'bg-secondary';
-                    break;
-                case 'In Progress':
-                    statusClass = 'bg-warning text-dark';
-                    break;
-                case 'In Review':
-                    statusClass = 'bg-info';
-                    break;
-                case 'Done':
-                    statusClass = 'bg-success';
-                    break;
-                case 'Closed':
-                    statusClass = 'bg-dark';
-                    break;
-            }
-            previewStatus.className = `badge ${statusClass}`;
-            previewStatus.textContent = statusSelect.value || 'No Status';
-        }
-        if(previewPriority) {
-            previewPriority.textContent = `Priority: ${prioritySelect.value || 'No Priority'}`;
-        }
+    // Reset error
+    document.querySelectorAll('.is-invalid').forEach(el => {
+        el.classList.remove('is-invalid');
+    });
+    
+    // Validasi title
+    const title = document.getElementById('title');
+    if (!title.value.trim() || title.value.trim().length < 3) {
+        title.classList.add('is-invalid');
+        isValid = false;
     }
     
-    titleInput.addEventListener('keyup', updatePreview);
-    statusSelect.addEventListener('change', updatePreview);
-    prioritySelect.addEventListener('change', updatePreview);
+    // Validasi status
+    const status = document.getElementById('status');
+    if (!status.value) {
+        status.classList.add('is-invalid');
+        isValid = false;
+    }
+    
+    // Validasi priority
+    const priority = document.getElementById('priority');
+    if (!priority.value) {
+        priority.classList.add('is-invalid');
+        isValid = false;
+    }
+    
+    // Validasi estimated hours
+    const estimatedHours = document.getElementById('estimated_hours');
+    if (estimatedHours.value && parseFloat(estimatedHours.value) < 0.5) {
+        estimatedHours.classList.add('is-invalid');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+// Update preview
+function updatePreview() {
+    const title = document.getElementById('title');
+    const status = document.getElementById('status');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewStatus = document.getElementById('previewStatus');
+    
+    if (previewTitle && title) {
+        previewTitle.textContent = title.value || 'Informasi Issue Saat Ini';
+    }
+    
+    if (previewStatus && status) {
+        let statusClass = '';
+        switch(status.value) {
+            case 'To Do':
+                statusClass = 'bg-secondary';
+                break;
+            case 'In Progress':
+                statusClass = 'bg-warning text-dark';
+                break;
+            case 'In Review':
+                statusClass = 'bg-info';
+                break;
+            case 'Done':
+                statusClass = 'bg-success';
+                break;
+            case 'Closed':
+                statusClass = 'bg-dark';
+                break;
+            default:
+                statusClass = 'bg-secondary';
+        }
+        previewStatus.className = `badge ${statusClass}`;
+        previewStatus.textContent = status.value || 'No Status';
+    }
+}
+
+// Event listeners untuk preview real-time
+document.getElementById('title')?.addEventListener('input', updatePreview);
+document.getElementById('status')?.addEventListener('change', updatePreview);
+
+// Submit form dengan validasi dan loading
+document.getElementById('editIssueForm')?.addEventListener('submit', function(e) {
+    if (!validateForm()) {
+        e.preventDefault();
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstError.focus();
+        }
+        return false;
+    }
+    
+    const btn = document.getElementById('btnUpdate');
+    btn.disabled = true;
+    btn.querySelector('.btn-text').textContent = 'Menyimpan...';
+    btn.querySelector('.spinner-border').classList.remove('d-none');
+    btn.classList.add('btn-loading');
+    
+    showLoading('Menyimpan perubahan issue...');
 });
 
+// Loading untuk navigasi
+document.getElementById('btnDetail')?.addEventListener('click', function(e) {
+    showLoading('Membuka detail issue...');
+});
+document.getElementById('btnBack')?.addEventListener('click', function(e) {
+    showLoading('Kembali ke daftar...');
+});
+document.getElementById('btnCancel')?.addEventListener('click', function(e) {
+    showLoading('Membuka detail issue...');
+});
+
+// Sembunyikan loading saat halaman selesai
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto close alert
 setTimeout(function() {
     let alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {

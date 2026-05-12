@@ -42,6 +42,34 @@
         gap: 10px;
         flex-wrap: wrap;
     }
+    
+    /* Loading Overlay */
+    .page-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .loading-spinner {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .loading-spinner p {
+        margin-top: 15px;
+        margin-bottom: 0;
+        color: #667eea;
+        font-weight: 500;
+    }
+    
     @media (max-width: 768px) {
         .profile-header {
             text-align: center;
@@ -95,12 +123,12 @@
             </div>
             <div class="col-md-4">
                 <div class="action-buttons justify-content-md-end">
-                    <a href="<?= base_url('profile/edit') ?>" class="btn btn-light">
+                    <button type="button" class="btn btn-light" id="btnEditProfile">
                         <i class="fas fa-edit me-2"></i>Edit Profile
-                    </a>
-                    <a href="<?= base_url('profile/change-password') ?>" class="btn btn-outline-light">
+                    </button>
+                    <button type="button" class="btn btn-outline-light" id="btnChangePassword">
                         <i class="fas fa-key me-2"></i>Change Password
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -166,5 +194,66 @@
         </div>
     </div>
 </div>
+
+<!-- Loading Overlay -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p id="loadingMessage"><i class="fas fa-spinner fa-spin me-2"></i> Memproses...</p>
+    </div>
+</div>
+
+<script>
+// Loading Overlay
+function showLoading(message = 'Memproses...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgElement = document.getElementById('loadingMessage');
+    if (overlay) {
+        if (msgElement) msgElement.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${message}`;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Tombol Edit Profile
+document.getElementById('btnEditProfile')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    showLoading('Membuka form edit profile...');
+    setTimeout(() => {
+        window.location.href = '<?= base_url('profile/edit') ?>';
+    }, 200);
+});
+
+// Tombol Change Password
+document.getElementById('btnChangePassword')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    showLoading('Membuka form ganti password...');
+    setTimeout(() => {
+        window.location.href = '<?= base_url('profile/change-password') ?>';
+    }, 200);
+});
+
+// Sembunyikan loading saat halaman selesai dimuat
+window.addEventListener('load', function() {
+    hideLoading();
+});
+
+// Auto close alert setelah 5 detik
+setTimeout(function() {
+    let alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        let bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    });
+}, 5000);
+</script>
 
 <?= $this->endSection() ?>
